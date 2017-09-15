@@ -1,0 +1,171 @@
+FORMAT: 1A
+HOST: http://verify:3000/
+
+# Jincor VERIFY Service
+
+Jincor Verification is a service for verify users email, phone, and etc.
+The main responsibilities are:
+1. Interact with a service provider
+1. Validation of a received code
+
+# API Endpoints Summary
+
+JWT_TOKEN should be passed for every API call in the HTTP headers,
+that was received from auth service.
+
+1. `/methods/{METHOD}/actions/initiate [POST]`
+1. `/methods/{METHOD}/verifiers/{VERIFICATION_ID}/actions/validate [POST]`
+1. `/methods/{METHOD}/verifiers/{VERIFICATION_ID} [DELETE]`
+
+## Verification: Initiate [/methods/{METHOD}/actions/initiate]
+
+Initiate verification process, with usage of specified *METHOD*.
+
++ Parameters
+    + METHOD (string) - One of *phone*, *email*, *google_auth*.
+
+### Initiate verification [POST]
+
+Example: email verification `/methods/email/actions/initiate`.
+Pass uuid in `policy.forcedVerificationId` to force using of your verification generated id.
+Set up own code in `policy.forcedCode` to force using of your verification code.
+
++ Request (application/json)
+    + Headers
+
+            Authorization: Barear {JWT_TOKEN}
+            Accept: application/vnd.jincor+json; version=1
+
+    + Body
+    
+            {
+                "consumer": "test@test.com",
+                "template": {
+                    "body": "Click on the <a href=\"https://service/verify-email/5RkvAr0PUe708a?code={{{CODE}}}\">Verify Link</a> to continue registration."
+                },
+                "generateCode": {
+                    "length": 32,
+                    "symbolSet": ["DIGITS", "alphas", "ALPHAS"]
+                },
+                "policy": {
+                    "expiredOn": "60 min"
+                }
+            }
+
++ Response 200 (application/json)
+
+            {
+                "status": 200,
+                "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
+                "attempts": 0,
+                "expiredOn": 1505817462
+            }
+
++ Response 200 (application/json)
+
+            {
+                "status": 200,
+                "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
+                "attempts": 0,
+                "expiredOn": 1505817462,
+                "barcode": "google_auth code"
+            }
+
++ Response 404 (application/json)
+
+        {
+            "status": 404,
+            "error": "Method not supported"
+        }
+
++ Response 422 (application/json)
+
+        {
+            "status": 422,
+            "error": "Invalid request",
+            "details": [
+                {"path": "generateCode.length", "error": "Incorrect number format"}
+            ]
+        }
+
+
+## Verification: Validate [/methods/{METHOD}/verifiers/{VERIFICATION_ID}/actions/validate]
+
++ Parameters
+    + METHOD (string) - One of *phone*, *email*, *google_auth*.
+    + VERIFICATION_ID (string)
+
+### Validate the code [POST]
+
+Example: code validation for the email
+method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/validate`.
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Barear {JWT_TOKEN}
+            Accept: application/vnd.jincor+json; version=1
+
+    + Body
+    
+            {
+                "code": "JeDknKO0EZRBT6aFPrFQhzcCA2aqyVsHzZeJ8Vf"
+            }
+ 
++ Response 200 (application/json)
+
+        {
+            "status": 200
+        }
+ 
++ Response 200 (application/json)
+
+        {
+            "status": 200,
+            "details": {}
+        }
+ 
++ Response 404 (application/json)
+
+        {
+            "status": 404,
+            "error": "Not found"
+        }
+
++ Response 422 (application/json)
+
+        {
+            "status": 422,
+            "error": "Invalid code",
+            "attempts": 1
+        }
+
+
+## Verification: Invalidate [/methods/{METHOD}/verifiers/{VERIFICATION_ID}]
+
++ Parameters
+    + METHOD (string) - One of *phone*, *email*, *google_auth*.
+    + VERIFICATION_ID (string)
+
+### Invalidate the code [DELETE]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Barear {JWT_TOKEN}
+            Accept: application/vnd.jincor+json; version=1
+
++ Response 200 (application/json)
+
+        {
+            "status": 200
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": 404,
+            "error": "Not found"
+        }
