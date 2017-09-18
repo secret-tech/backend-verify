@@ -6,7 +6,7 @@ const {
   HTTPS_PORT,
   HTTPS_SERVER,
   FORCE_HTTPS,
-  AUTH_JWT_KEY
+  AUTH_API_URL
 } = process.env
 
 export default {
@@ -16,11 +16,8 @@ export default {
     httpsServer: HTTPS_SERVER || 'disabled',
     forceHttps: FORCE_HTTPS || 'disabled'
   },
-  jwt: {
-    algorithm: 'HS256',
-    secret_separator: ':',
-    expiration: 604800,
-    secret: AUTH_JWT_KEY || '%WBS#7LFaI@yY3EYapF$p3oZeLGnYeeyq0XdD$!pu9HtOw8#soxiVe'
+  auth: {
+    url: AUTH_API_URL || 'http://auth:3000/tenant/verify'
   },
   redis: {
     port: parseInt(REDIS_PORT, 10) || 6379,

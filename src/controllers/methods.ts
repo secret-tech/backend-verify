@@ -3,6 +3,8 @@ import { inject, injectable } from 'inversify'
 import { controller, httpPost } from 'inversify-express-utils'
 import 'reflect-metadata'
 
+import { responseWithError, responseAsUnbehaviorError } from '../helpers/responses'
+
 import {
   InvalidParametersException,
   VerificationServiceFactory,
@@ -41,24 +43,17 @@ export class MethodsController {
     try {
       const verificationService = this.verificationFactory.create(req.method)
       const verificationDetails = await verificationService.initiate(req.body)
-      res.json(verificationDetails)
+      res.json(Object.assign({}, verificationDetails, {status: 200}))
     } catch (err) {
       if (err instanceof InvalidParametersException) {
-        res.status(422).send({
+        responseWithError(res, 422, {
           'error': err.name,
           'details': err.details
         })
       } else {
-        this.responseAsUnbehaviorError(res, err)
+        responseAsUnbehaviorError(res, err)
       }
     }
   }
 
-  // @TODO: Moveout to helper
-  private responseAsUnbehaviorError(res: Response, err: Error) {
-    res.status(500).send({
-      'error': err.name,
-      'message': err.message
-    })
-  }
 }

@@ -1,3 +1,4 @@
+import { responseWithError } from '../helpers/responses'
 import * as Joi from 'joi'
 import { Response, Request, NextFunction } from 'express'
 
@@ -32,7 +33,7 @@ function commonFlowRequestMiddleware(scheme: Joi.Schema, req: Request, res: Resp
   const result = Joi.validate(req.body, scheme, options)
 
   if (result.error) {
-    return res.status(422).json({
+    return responseWithError(res, 422, {
       'error': 'Invalid request',
       'details': result.value
     })

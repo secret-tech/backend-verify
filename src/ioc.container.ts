@@ -15,7 +15,7 @@ let container = new Container()
 
 // services
 container.bind<auths.AuthenticationService>(auths.AuthenticationServiceType)
-  .to(auths.JwtTestableInlineAuthenticationService)
+  .to(auths.JwtSingleInlineAuthenticationService)
 
 container.bind<storages.StorageService>(storages.StorageServiceType)
   .to(storages.SimpleInMemoryStorageService)

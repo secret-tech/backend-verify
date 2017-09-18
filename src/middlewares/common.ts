@@ -2,10 +2,13 @@ import { Response, Request, NextFunction } from 'express'
 import { inject, injectable } from 'inversify'
 
 import { VerificationServiceFactory, VerificationServiceFactoryType } from '../services/verifications'
-import { AuthenticationService, AuthenticationServiceType, NotAuthorizedException } from '../services/auth'
+import { AuthenticationService, AuthenticationServiceType } from '../services/auth'
+import { responseWithError } from '../helpers/responses'
 
 export const AuthMiddlewareType = Symbol('AuthMiddlewareType')
 export const SupportedMethodsMiddlewareType = Symbol('SupportedMethodsMiddlewareType')
+
+class NotAuthorizedException extends Error { }
 
 /**
  * Authentication middleware.
@@ -24,34 +27,25 @@ export class AuthMiddleware {
    */
   async execute(req: Request, res: Response, next: NextFunction) {
     try {
-      await this.authenticationService.validate(this.extractJwtFromRequst(req))
-      return next()
-    } catch (err) {
-      if (err instanceof NotAuthorizedException) {
-        return res.status(401).json({
-          error: 'Not Authorized'
-        })
-      } else {
-        return res.status(500).json({
-          error: err
-        })
+      const jwtToken = this.extractJwtFromRequstHeaders(req)
+      if (!jwtToken || !await this.authenticationService.validate(jwtToken)) {
+        return responseWithError(res, 401, {error: 'Not Authorized'})
       }
+      return next()
+    } catch (error) {
+      return responseWithError(res, 500, {error})
     }
   }
 
-  /**
-   * Extract jwt token from header
-   * @param req Requst
-   */
-  private extractJwtFromRequst(req: Request): string {
+  private extractJwtFromRequstHeaders(req: Request): string|null {
     if (!req.headers.authorization) {
-      throw new NotAuthorizedException()
+      return null
     }
 
     const parts = req.headers.authorization.split(' ')
 
     if (parts[0] !== 'Bearer' || !parts[1]) {
-      throw new NotAuthorizedException()
+      return null
     }
 
     return parts[1]
@@ -68,9 +62,7 @@ export class SupportedMethodsMiddleware {
 
   execute(req: Request, res: Response, next: NextFunction) {
     if (!this.verificationFactory.hasMethod(req.params.method)) {
-      return res.status(404).json({
-        error: 'Method not supported'
-      })
+      return responseWithError(res, 404, 'Method not supported')
     }
 
     return next()

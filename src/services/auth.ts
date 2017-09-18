@@ -3,10 +3,11 @@ import { injectable, inject } from 'inversify'
 import * as request from 'request'
 import 'reflect-metadata'
 
+import config from '../config'
+
 export const AuthenticationServiceType = Symbol('AuthenticationServiceType')
 
 export class AuthenticationException extends Error { }
-export class NotAuthorizedException extends AuthenticationException { }
 
 /**
  * AuthenticationService interface.
@@ -23,11 +24,13 @@ export interface AuthenticationService {
 @injectable()
 export class ExternalHttpJwtAuthenticationService implements AuthenticationService {
 
+  private apiUrl: string = config.auth.url
+
   constructor() {
   }
 
   /**
-   *
+   * Validate JWT token
    * @param jwtToken
    */
   async validate(jwtToken: string): Promise<boolean> {
@@ -35,38 +38,68 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
       return false
     }
 
-    const result = await this.callValidateMethod(jwtToken)
-    if (result instanceof Error) {
-      return false
-    }
+    const result = await this.callVerifyJwtTokenMethodEndpoint(jwtToken)
 
     return result
   }
 
   /**
-   *
+   * Make HTTP/HTTPS request
    * @param jwtToken
    */
-  protected callValidateMethod(jwtToken: string): Promise<boolean | Error> {
+  private callVerifyJwtTokenMethodEndpoint(jwtToken: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      resolve(true)
+      request.post(this.apiUrl, {
+        headers: {
+          'accept': 'application/json',
+          'content-type': 'application/json'
+        },
+        body: JSON.stringify({token: jwtToken})
+        // agentOptions: {
+        //   cert: '',
+        //   key: '',
+        //   passphrase: '',
+        //   securityOptions: 'SSL_OP_NO_SSLv3'
+        // }
+      }, (error: any, response: any, body: any) => {
+        if (error) {
+          reject(new Error(error))
+        }
+
+        if (response.status !== 200) {
+          reject(new Error(body))
+        } else {
+          resolve(true)
+        }
+      })
     })
   }
 
 }
 
 /**
- * Simple AuthenticationService
+ * Simple, single value token validator
+ * @internal
  */
 @injectable()
-export class JwtTestableInlineAuthenticationService implements AuthenticationService {
+export class JwtSingleInlineAuthenticationService implements AuthenticationService {
+
+  private storedToken: string = 'TOKEN'
 
   /**
-   *
+   * Set token
+   * @param token
+   */
+  public setToken(token: string) {
+    this.storedToken = token
+  }
+
+  /**
+   * Validate JWT token
    * @param jwtToken
    */
   async validate(jwtToken: string): Promise<boolean> {
-    if (jwtToken.length === 0) {
+    if (jwtToken !== this.storedToken) {
       return false
     }
     return true
