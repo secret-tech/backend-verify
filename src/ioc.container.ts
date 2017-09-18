@@ -7,18 +7,21 @@ import { VerifiersController } from './controllers/verifiers'
 
 import * as commonMiddlewares from './middlewares/common'
 import * as validationMiddlewares from './middlewares/requests'
+import * as auths from './services/auth'
 import * as storages from './services/storages'
 import * as verifications from './services/verifications'
 
 let container = new Container()
 
 // services
+container.bind<auths.AuthenticationService>(auths.AuthenticationServiceType)
+  .to(auths.JwtTestableInlineAuthenticationService)
+
 container.bind<storages.StorageService>(storages.StorageServiceType)
   .to(storages.SimpleInMemoryStorageService)
 
 container.bind<verifications.VerificationServiceFactory>(verifications.VerificationServiceFactoryType)
   .to(verifications.VerificationServiceFactoryRegister)
-
 
 // middlewares
 container.bind<commonMiddlewares.AuthMiddleware>(commonMiddlewares.AuthMiddlewareType)
@@ -27,12 +30,13 @@ container.bind<commonMiddlewares.AuthMiddleware>(commonMiddlewares.AuthMiddlewar
 container.bind<commonMiddlewares.SupportedMethodsMiddleware>(commonMiddlewares.SupportedMethodsMiddlewareType)
   .to(commonMiddlewares.SupportedMethodsMiddleware)
 
-const authMiddleware = container.resolve(commonMiddlewares.AuthMiddleware)
+const authMiddleware = container.get<commonMiddlewares.AuthMiddleware>(commonMiddlewares.AuthMiddlewareType)
 container.bind<express.RequestHandler>('AuthMiddleware').toConstantValue(
   (req: any, res: any, next: any) => authMiddleware.execute(req, res, next)
 )
 
-const supportedMethodsMiddleware = container.resolve(commonMiddlewares.SupportedMethodsMiddleware)
+const supportedMethodsMiddleware = container
+  .get<commonMiddlewares.SupportedMethodsMiddleware>(commonMiddlewares.SupportedMethodsMiddlewareType)
 container.bind<express.RequestHandler>('SupportedMethodsMiddleware').toConstantValue(
   (req: any, res: any, next: any) => supportedMethodsMiddleware.execute(req, res, next)
 )
