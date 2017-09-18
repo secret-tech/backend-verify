@@ -15,13 +15,13 @@ let container = new Container()
 
 // services
 container.bind<auths.AuthenticationService>(auths.AuthenticationServiceType)
-  .to(auths.JwtSingleInlineAuthenticationService)
+  .to(auths.JwtSingleInlineAuthenticationService).inSingletonScope()
 
 container.bind<storages.StorageService>(storages.StorageServiceType)
-  .to(storages.SimpleInMemoryStorageService)
+  .to(storages.SimpleInMemoryStorageService).inSingletonScope()
 
 container.bind<verifications.VerificationServiceFactory>(verifications.VerificationServiceFactoryType)
-  .to(verifications.VerificationServiceFactoryRegister)
+  .to(verifications.VerificationServiceFactoryRegister).inSingletonScope()
 
 // middlewares
 container.bind<commonMiddlewares.AuthMiddleware>(commonMiddlewares.AuthMiddlewareType)
