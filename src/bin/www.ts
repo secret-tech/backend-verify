@@ -15,10 +15,10 @@ const httpServer = http.createServer(server)
 httpServer.listen(config.server.port)
 
 if (config.server.httpsServer === 'enabled') {
-	const httpsOptions = {
-		key: fs.readFileSync(__dirname + '/server.key'),
-		cert: fs.readFileSync(__dirname + '/auth.crt')
-	}
-	const httpsServer = https.createServer(httpsOptions, server)
-	httpsServer.listen(config.server.httpsPort)
+  const httpsOptions = {
+    key: fs.readFileSync(__dirname + '/server.key'),
+    cert: fs.readFileSync(__dirname + '/auth.crt')
+  }
+  const httpsServer = https.createServer(httpsOptions, server)
+  httpsServer.listen(config.server.httpsPort)
 }

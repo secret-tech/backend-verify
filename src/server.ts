@@ -11,34 +11,34 @@ const app: Application = express()
 app.disable('x-powered-by')
 
 app.use((req: Request, res: Response, next: NextFunction) => {
-	if (config.server.forceHttps === 'enabled') {
-		if (!req.secure) {
-			return res.redirect('https://' + req.hostname + ':' + config.server.httpsPort + req.originalUrl)
-		}
+  if (config.server.forceHttps === 'enabled') {
+    if (!req.secure) {
+      return res.redirect('https://' + req.hostname + ':' + config.server.httpsPort + req.originalUrl)
+    }
 
-		res.setHeader('Strict-Transport-Security', 'max-age=31536000')
-	}
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000')
+  }
 
-	if (req.header('Accept') !== 'application/json') {
-		return res.status(406).json({
-			error: 'Unsupported "Accept" header',
-		})
-	}
+  if (req.header('Accept') !== 'application/json') {
+    return res.status(406).json({
+      error: 'Unsupported "Accept" header'
+    })
+  }
 
-	res.setHeader('X-Content-Type-Options', 'nosniff')
-	res.setHeader('X-Frame-Options', 'deny')
-	res.setHeader('Content-Security-Policy', 'default-src \'none\'')
-	return next()
+  res.setHeader('X-Content-Type-Options', 'nosniff')
+  res.setHeader('X-Frame-Options', 'deny')
+  res.setHeader('Content-Security-Policy', 'default-src \'none\'')
+  return next()
 })
 
 app.post('*', (req: Request, res: Response, next: NextFunction) => {
-	if (req.header('Content-Type') !== 'application/json') {
-		return res.status(406).json({
-			error: 'Unsupported "Content-Type"',
-		})
-	}
+  if (req.header('Content-Type') !== 'application/json') {
+    return res.status(406).json({
+      error: 'Unsupported "Content-Type"'
+    })
+  }
 
-	return next()
+  return next()
 })
 
 app.use(bodyParser.json())
