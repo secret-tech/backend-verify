@@ -1,21 +1,26 @@
-import { Container } from 'inversify'
+import { interfaces as InversifyInterfaces, Container } from 'inversify'
 import { interfaces, TYPE } from 'inversify-express-utils'
-import * as express from 'express'
+import * as express from 'express';
 
 import { MethodsController } from './controllers/methods'
 import { VerifiersController } from './controllers/verifiers'
 
-import * as commonMiddlewares from './middlewares/common'
-import * as validationMiddlewares from './middlewares/requests'
-import * as auths from './services/auth'
-import * as storages from './services/storages'
-import * as verifications from './services/verifications'
+import * as commonMiddlewares from './middlewares/common';
+import * as validationMiddlewares from './middlewares/requests';
+import * as auths from './services/auth';
+import * as storages from './services/storages';
+import * as verifications from './services/verifications';
 
 let container = new Container()
 
 // services
 container.bind<auths.AuthenticationService>(auths.AuthenticationServiceType)
-  .to(auths.JwtSingleInlineAuthenticationService).inSingletonScope()
+  .toFactory<auths.AuthenticationService>((context: InversifyInterfaces.Context) => {
+    let instance
+    return instance || (instance = new auths.CachedAuthenticationDecorator(
+      context.container.resolve(auths.JwtSingleInlineAuthenticationService)
+    ))
+  })
 
 container.bind<storages.StorageService>(storages.StorageServiceType)
   .to(storages.SimpleInMemoryStorageService).inSingletonScope()

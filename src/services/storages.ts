@@ -10,7 +10,7 @@ export const StorageServiceType = Symbol('StorageServiceType')
 /**
  * Storage Options
  */
-export interface StorageOptions {
+export interface ValueOptions {
   ttlInSeconds: number
 }
 
@@ -19,7 +19,7 @@ export interface StorageOptions {
  */
 export interface StorageService {
 
-  set<T>(name: string, value: T, options: StorageOptions): Promise<T>
+  set<T>(name: string, value: T, options: ValueOptions): Promise<T>
   remove<T>(name: string): Promise<T>
   get<T>(name: string, defaultValue: T): Promise<T>
 
@@ -40,7 +40,7 @@ export class SimpleInMemoryStorageService implements StorageService {
   private gcMinimalTimeInterval: number = 10
   private lastGcTime: number = this.getNextGcTime()
 
-  set<T>(name: string, value: T, options: StorageOptions): Promise<T> {
+  set<T>(name: string, value: T, options: ValueOptions): Promise<T> {
     this.gc()
     this.storage[name] = {
       ttl: options.ttlInSeconds + +new Date,
@@ -90,7 +90,7 @@ export class RedisStorageService implements StorageService {
     this.client = redis.createClient(redisConfig.host, redisConfig.port)
   }
 
-  set<T>(name: string, value: T, options: StorageOptions): Promise<T> {
+  set<T>(name: string, value: T, options: ValueOptions): Promise<T> {
     return new Promise((resolve, reject) => {
       this.client.setex(this.getKey(name), options.ttlInSeconds, value, (err, result) => err ? reject(err) : resolve(value))
     })

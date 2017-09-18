@@ -1,3 +1,4 @@
+import * as LRU from 'lru-cache'
 import { Response, Request, NextFunction } from 'express'
 import { injectable, inject } from 'inversify'
 import * as request from 'request'
@@ -10,7 +11,7 @@ export const AuthenticationServiceType = Symbol('AuthenticationServiceType')
 export class AuthenticationException extends Error { }
 
 /**
- * AuthenticationService interface.
+ * AuthenticationService interface
  */
 export interface AuthenticationService {
 
@@ -47,14 +48,14 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
    * Make HTTP/HTTPS request
    * @param jwtToken
    */
-  private callVerifyJwtTokenMethodEndpoint(jwtToken: string): Promise<boolean> {
+  async private callVerifyJwtTokenMethodEndpoint(jwtToken: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      request.post(this.apiUrl, {
+      request.post({
+        url: this.apiUrl,
         headers: {
           'accept': 'application/json',
-          'content-type': 'application/json'
         },
-        body: JSON.stringify({token: jwtToken})
+        json: {token: jwtToken}
         // agentOptions: {
         //   cert: '',
         //   key: '',
@@ -105,4 +106,34 @@ export class JwtSingleInlineAuthenticationService implements AuthenticationServi
     return true
   }
 
+}
+
+/**
+ * Cache decorator for only successfully request
+ */
+export class CachedAuthenticationDecorator implements AuthenticationService {
+  private lruCache: any
+
+  constructor(private authenticationService: AuthenticationService, maxAgeInSeconds: number = 30, maxLength: number = 1000) {
+    this.lruCache = LRU({
+      max: maxLength,
+      maxAge: maxAgeInSeconds * 1000
+    })
+  }
+
+  async validate(jwtToken: string): Promise<boolean> {
+    try {
+      if (this.lruCache.get(jwtToken)) {
+        return true
+      }
+      if (await this.authenticationService.validate(jwtToken)) {
+        this.lruCache.set(jwtToken, true)
+        return true
+      }
+      return false
+    } catch (err) {
+      // @TODO: Add processing
+      return false
+    }
+  }
 }
