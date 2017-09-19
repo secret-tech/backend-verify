@@ -19,7 +19,7 @@ const jsonSchemeInitiateRequest = Joi.object().keys({
   }),
 
   policy: Joi.object({
-    expiredOn: Joi.string(),
+    expiredOn: Joi.string().required(),
     forcedVerificationId: Joi.string(),
     forcedCode: Joi.string()
   }).required()

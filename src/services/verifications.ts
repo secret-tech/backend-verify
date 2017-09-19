@@ -86,7 +86,7 @@ function generateCode(symbolSet: Array<string>, length: number) {
   let stringWithAllSymbols = ''
   let resultCode = ''
 
-  stringWithAllSymbols = symbolSet.map(element => {
+  stringWithAllSymbols = (symbolSet || []).map(element => {
     switch (element) {
       case 'alphas':
         return 'abcdefghijklmnopqrstuvwxyz' // ~27%
