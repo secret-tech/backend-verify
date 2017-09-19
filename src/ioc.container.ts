@@ -16,18 +16,17 @@ let container = new Container()
 
 // services
 container.bind<auths.AuthenticationService>(auths.AuthenticationServiceType)
-  .toFactory<auths.AuthenticationService>((context: InversifyInterfaces.Context) => {
-    let instance
-    return instance || (instance = new auths.CachedAuthenticationDecorator(
-      context.container.resolve(auths.JwtSingleInlineAuthenticationService)
-    ))
-  })
+  .toDynamicValue((context: InversifyInterfaces.Context): auths.AuthenticationService => {
+    return new auths.CachedAuthenticationDecorator(
+      context.container.resolve(auths.ExternalHttpJwtAuthenticationService)
+    )
+  }).inSingletonScope()
 
 container.bind<providers.EmailProviderService>(providers.EmailProviderServiceType)
   .to(providers.EmailProviderService).inSingletonScope()
 
 container.bind<storages.StorageService>(storages.StorageServiceType)
-  .to(storages.SimpleInMemoryStorageService).inSingletonScope()
+  .to(storages.RedisStorageService).inSingletonScope()
 
 container.bind<verifications.VerificationServiceFactory>(verifications.VerificationServiceFactoryType)
   .to(verifications.VerificationServiceFactoryRegister).inSingletonScope()
@@ -47,7 +46,7 @@ container.bind<express.RequestHandler>('AuthMiddleware').toConstantValue(
 )
 
 const supportedMethodsMiddleware = container
-.get<commonMiddlewares.SupportedMethodsMiddleware>(commonMiddlewares.SupportedMethodsMiddlewareType)
+  .get<commonMiddlewares.SupportedMethodsMiddleware>(commonMiddlewares.SupportedMethodsMiddlewareType)
 
 container.bind<express.RequestHandler>('SupportedMethodsMiddleware').toConstantValue(
   (req: any, res: any, next: any) => supportedMethodsMiddleware.execute(req, res, next)

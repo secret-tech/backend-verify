@@ -26,6 +26,7 @@ export interface AuthenticationService {
 export class ExternalHttpJwtAuthenticationService implements AuthenticationService {
 
   private apiUrl: string = config.auth.url
+  private timeout: number = config.auth.timeout
 
   constructor() {
   }
@@ -39,9 +40,7 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
       return false
     }
 
-    const result = await this.callVerifyJwtTokenMethodEndpoint(jwtToken)
-
-    return result
+    return await this.callVerifyJwtTokenMethodEndpoint(jwtToken)
   }
 
   /**
@@ -52,6 +51,7 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
     return new Promise<boolean>((resolve, reject) => {
       request.post({
         url: this.apiUrl,
+        timeout: this.timeout,
         headers: {
           'accept': 'application/json'
         },
@@ -64,13 +64,21 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
         // }
       }, (error: any, response: any, body: any) => {
         if (error) {
-          reject(new Error(error))
+          return reject(new AuthenticationException(error))
         }
 
-        if (response.status !== 200) {
-          reject(new Error(body))
-        } else {
+        try {
+          if (response.statusCode !== 200 || !body.decoded) {
+            throw new Error('Invalid token')
+          }
+
+          if (!body.decoded.isTenant) {
+            throw new Error('JWT isn\'t tenant token type')
+          }
+
           resolve(true)
+        } catch (err) {
+          reject(new AuthenticationException(err))
         }
       })
     })
@@ -131,17 +139,15 @@ export class CachedAuthenticationDecorator implements AuthenticationService {
    */
   async validate(jwtToken: string): Promise<boolean> {
     try {
-      if (this.lruCache.get(jwtToken)) {
-        return true
+      if (this.lruCache.has(jwtToken)) {
+        return this.lruCache.get(jwtToken)
       }
-      if (await this.authenticationService.validate(jwtToken)) {
-        this.lruCache.set(jwtToken, true)
-        return true
-      }
-      return false
+
+      const result = await this.authenticationService.validate(jwtToken)
+      this.lruCache.set(jwtToken, result)
+      return result
     } catch (err) {
-      // @TODO: Add processing
-      return false
+      throw err
     }
   }
 }

@@ -2,7 +2,7 @@ import { Response, Request, NextFunction } from 'express'
 import { inject, injectable } from 'inversify'
 
 import { VerificationServiceFactory, VerificationServiceFactoryType } from '../services/verifications'
-import { AuthenticationService, AuthenticationServiceType } from '../services/auth'
+import { AuthenticationService, AuthenticationServiceType, AuthenticationException } from '../services/auth';
 import { responseWithError } from '../helpers/responses'
 
 export const AuthMiddlewareType = Symbol('AuthMiddlewareType')
@@ -33,6 +33,9 @@ export class AuthMiddleware {
       }
       return next()
     } catch (error) {
+      if (error instanceof AuthenticationException) {
+        return responseWithError(res, 500, { error: error.message })
+      }
       return responseWithError(res, 500, { error })
     }
   }
