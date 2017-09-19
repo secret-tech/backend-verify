@@ -10,6 +10,10 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       FORCE_HTTPS: disabled
+      AUTH_API_URL: ${AUTH_API_URL}
+      EMAIL_DRIVER: ${EMAIL_DRIVER}
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
+      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
     ports:
       - "3001"
       - "4001"
