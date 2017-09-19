@@ -1,9 +1,9 @@
-import { injectable } from 'inversify'
-import * as redis from 'redis'
-import { RedisClient } from 'redis'
-import 'reflect-metadata'
+import { injectable } from 'inversify';
+import * as redis from 'redis';
+import { RedisClient } from 'redis';
+import 'reflect-metadata';
 
-import config from '../config'
+import config from '../config';
 
 // Exceptions
 
@@ -11,13 +11,13 @@ export class StorageException extends Error { }
 
 // Types
 
-export const StorageServiceType = Symbol('StorageServiceType')
+export const StorageServiceType = Symbol('StorageServiceType');
 
 /**
  * Storage Options
  */
 export interface ValueOptions {
-  ttlInSeconds: number
+  ttlInSeconds: number;
 }
 
 /**
@@ -32,14 +32,14 @@ export interface StorageService {
    * @param value
    * @param options
    */
-  set<T>(name: string, value: T, options: ValueOptions): Promise<T>
+  set<T>(name: string, value: T, options: ValueOptions): Promise<T>;
 
   /**
    * Remove value
    *
    * @param name
    */
-  remove<T>(name: string): Promise<T>
+  remove<T>(name: string): Promise<T>;
 
   /**
    * Get value
@@ -47,7 +47,7 @@ export interface StorageService {
    * @param name
    * @param defaultValue
    */
-  get<T>(name: string, defaultValue: T): Promise<T>
+  get<T>(name: string, defaultValue: T): Promise<T>;
 
 }
 
@@ -62,37 +62,37 @@ export class SimpleInMemoryStorageService implements StorageService {
       ttl: number;
       data: any;
     };
-  } = {}
-  private gcMinimalTimeInterval: number = 10
-  private lastGcTime: number = this.getNextGcTime()
+  } = {};
+  private gcMinimalTimeInterval: number = 10;
+  private lastGcTime: number = this.getNextGcTime();
 
   /**
    * @inheritdoc
    */
   public set<T>(name: string, value: T, options: ValueOptions): Promise<T> {
-    this.gc()
+    this.gc();
     this.storage[name] = {
       ttl: options.ttlInSeconds * 1000 + +new Date(),
       data: value
-    }
-    return Promise.resolve(value)
+    };
+    return Promise.resolve(value);
   }
 
   /**
    * @inheritdoc
    */
   public remove<T>(name: string): Promise<T> {
-    const value = typeof this.storage[name] === 'undefined' ? null : this.storage[name].data
-    delete this.storage[name]
-    return Promise.resolve(value)
+    const value = typeof this.storage[name] === 'undefined' ? null : this.storage[name].data;
+    delete this.storage[name];
+    return Promise.resolve(value);
   }
 
   /**
    * @inheritdoc
    */
   public get<T>(name: string, defaultValue: T): Promise<T> {
-    this.gc()
-    return Promise.resolve(typeof this.storage[name] === 'undefined' ? defaultValue : this.storage[name].data)
+    this.gc();
+    return Promise.resolve(typeof this.storage[name] === 'undefined' ? defaultValue : this.storage[name].data);
   }
 
   /**
@@ -102,20 +102,20 @@ export class SimpleInMemoryStorageService implements StorageService {
     if (this.lastGcTime < +new Date()) {
       Object.keys(this.storage).forEach((key) => {
         if (this.storage[key].ttl < +new Date()) {
-          delete this.storage[key]
+          delete this.storage[key];
         }
-      })
-      this.lastGcTime = this.getNextGcTime()
+      });
+      this.lastGcTime = this.getNextGcTime();
     }
   }
 
   private getNextGcTime(): number {
-    return this.gcMinimalTimeInterval * 1000 + (+new Date())
+    return this.gcMinimalTimeInterval * 1000 + (+new Date());
   }
 
 }
 
-const redisConfig = config.redis
+const redisConfig = config.redis;
 
 /**
  * Redis storage implementation.
@@ -123,7 +123,7 @@ const redisConfig = config.redis
 @injectable()
 export class RedisStorageService implements StorageService {
 
-  private client: RedisClient
+  private client: RedisClient;
 
   constructor() {
     this.client = redis.createClient(
@@ -134,7 +134,7 @@ export class RedisStorageService implements StorageService {
         // retry_strategy: (s) => {}
         // prefix: redisConfig.prefix
       }
-    )
+    );
   }
 
   /**
@@ -147,12 +147,12 @@ export class RedisStorageService implements StorageService {
         JSON.stringify(value),
         (err: any, result) => {
           if (err) {
-            return reject(new StorageException(err))
+            return reject(new StorageException(err));
           }
-          resolve(value)
+          resolve(value);
         }
-      )
-    })
+      );
+    });
   }
 
   /**
@@ -163,16 +163,16 @@ export class RedisStorageService implements StorageService {
       this.client.del(this.getKey(name),
         (err: any, result) => {
           if (err) {
-            return reject(new StorageException(err))
+            return reject(new StorageException(err));
           }
           try {
-            resolve(JSON.parse(result))
+            resolve(JSON.parse(result));
           } catch (error) {
-            reject(new StorageException(error))
+            reject(new StorageException(error));
           }
         }
-      )
-    })
+      );
+    });
   }
 
   /**
@@ -183,20 +183,20 @@ export class RedisStorageService implements StorageService {
       this.client.get(this.getKey(name),
         (err: any, result) => {
           if (err) {
-            return reject(new StorageException(err))
+            return reject(new StorageException(err));
           }
           try {
-            resolve(JSON.parse(result))
+            resolve(JSON.parse(result));
           } catch (error) {
-            reject(new StorageException(error))
+            reject(new StorageException(error));
           }
         }
-      )
-    })
+      );
+    });
   }
 
   private getKey(key: string): string {
-    return redisConfig.prefix + key
+    return redisConfig.prefix + key;
   }
 
 }

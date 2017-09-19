@@ -1,7 +1,7 @@
-import config from '../../config'
-import * as emailProviders from './email'
-import { injectable } from 'inversify'
-import 'reflect-metadata'
+import config from '../../config';
+import * as emailProviders from './email';
+import { injectable } from 'inversify';
+import 'reflect-metadata';
 
 // Exceptions
 export class ProviderException extends Error { }
@@ -26,10 +26,10 @@ export interface EmailProvider {
    * @param text
    * @return Promise<any>
    */
-  send(sender: string, recipients: Array<string>, subject: string, text: string): Promise<any>
+  send(sender: string, recipients: Array<string>, subject: string, text: string): Promise<any>;
 }
 
-export const EmailProviderServiceType = Symbol('EmailProviderService')
+export const EmailProviderServiceType = Symbol('EmailProviderService');
 
 /**
  * Email Providers service
@@ -38,7 +38,7 @@ export const EmailProviderServiceType = Symbol('EmailProviderService')
 export class EmailProviderService {
   private emailRegistry: {
     [key: string]: EmailProvider
-  } = {}
+  } = {};
 
   /**
    * Get concrete email provider by name
@@ -47,7 +47,7 @@ export class EmailProviderService {
   public getEmailProviderByName(name: string): EmailProvider {
     return this.emailRegistry[name] || (
       this.emailRegistry[name] = this.findAndInstantiate(name, emailProviders)
-    )
+    );
   }
 
   /**
@@ -59,12 +59,12 @@ export class EmailProviderService {
         providers[providerClassName] instanceof Object &&
         providers[providerClassName].hasOwnProperty('getName') &&
         providers[providerClassName].getName() === name
-      ))
+      ));
 
     if (providerName.length !== 1) {
-      throw new NotFoundException(`${name} not found or it\'s duplicated`)
+      throw new NotFoundException(`${name} not found or it\'s duplicated`);
     }
 
-    return new providers[providerName[0]]()
+    return new providers[providerName[0]]();
   }
 }

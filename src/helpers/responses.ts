@@ -1,4 +1,4 @@
-import { Response } from 'express'
+import { Response } from 'express';
 
 /**
  * Format default error response
@@ -7,7 +7,7 @@ import { Response } from 'express'
  * @param responseJson
  */
 export function responseWithError(res: Response, status: number, responseJson: Object) {
-  return res.status(status).json(Object.assign({}, responseJson, { status: status }))
+  return res.status(status).json(Object.assign({}, responseJson, { status: status }));
 }
 
 /**
@@ -19,5 +19,5 @@ export function responseAsUnbehaviorError(res: Response, err: Error) {
   responseWithError(res, 500, {
     'error': err.name,
     'message': err.message
-  })
+  });
 }

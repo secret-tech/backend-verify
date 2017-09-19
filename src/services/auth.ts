@@ -1,12 +1,12 @@
-import * as LRU from 'lru-cache'
-import { Response, Request, NextFunction } from 'express'
-import { injectable, inject } from 'inversify'
-import * as request from 'request'
-import 'reflect-metadata'
+import * as LRU from 'lru-cache';
+import { Response, Request, NextFunction } from 'express';
+import { injectable, inject } from 'inversify';
+import * as request from 'request';
+import 'reflect-metadata';
 
-import config from '../config'
+import config from '../config';
 
-export const AuthenticationServiceType = Symbol('AuthenticationServiceType')
+export const AuthenticationServiceType = Symbol('AuthenticationServiceType');
 
 export class AuthenticationException extends Error { }
 
@@ -15,7 +15,7 @@ export class AuthenticationException extends Error { }
  */
 export interface AuthenticationService {
 
-  validate(jwtToken: string): Promise<boolean>
+  validate(jwtToken: string): Promise<boolean>;
 
 }
 
@@ -25,8 +25,8 @@ export interface AuthenticationService {
 @injectable()
 export class ExternalHttpJwtAuthenticationService implements AuthenticationService {
 
-  private apiUrl: string = config.auth.url
-  private timeout: number = config.auth.timeout
+  private apiUrl: string = config.auth.url;
+  private timeout: number = config.auth.timeout;
 
   constructor() {
   }
@@ -37,10 +37,10 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
    */
   async validate(jwtToken: string): Promise<boolean> {
     if (!jwtToken) {
-      return false
+      return false;
     }
 
-    return await this.callVerifyJwtTokenMethodEndpoint(jwtToken)
+    return await this.callVerifyJwtTokenMethodEndpoint(jwtToken);
   }
 
   /**
@@ -64,24 +64,20 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
         // }
       }, (error: any, response: any, body: any) => {
         if (error) {
-          return reject(new AuthenticationException(error))
+          return reject(new AuthenticationException(error));
         }
 
-        try {
-          if (response.statusCode !== 200 || !body.decoded) {
-            throw new Error('Invalid token')
-          }
-
-          if (!body.decoded.isTenant) {
-            throw new Error('JWT isn\'t tenant token type')
-          }
-
-          resolve(true)
-        } catch (err) {
-          reject(new AuthenticationException(err))
+        if (response.statusCode !== 200 || !body.decoded) {
+          return reject(new AuthenticationException('Invalid token'));
         }
-      })
-    })
+
+        if (!body.decoded.isTenant) {
+          return reject(new AuthenticationException('JWT isn\'t type of tenant'));
+        }
+
+        resolve(true);
+      });
+    });
   }
 
 }
@@ -93,14 +89,14 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
 @injectable()
 export class JwtSingleInlineAuthenticationService implements AuthenticationService {
 
-  private storedToken: string = 'TOKEN'
+  private storedToken: string = 'TOKEN';
 
   /**
    * Set token
    * @param token
    */
   public setToken(token: string) {
-    this.storedToken = token
+    this.storedToken = token;
   }
 
   /**
@@ -109,9 +105,9 @@ export class JwtSingleInlineAuthenticationService implements AuthenticationServi
    */
   async validate(jwtToken: string): Promise<boolean> {
     if (jwtToken !== this.storedToken) {
-      return false
+      return false;
     }
-    return true
+    return true;
   }
 
 }
@@ -120,7 +116,7 @@ export class JwtSingleInlineAuthenticationService implements AuthenticationServi
  * Cache decorator for only successfully request
  */
 export class CachedAuthenticationDecorator implements AuthenticationService {
-  private lruCache: any
+  private lruCache: any;
 
   /**
    * @param authenticationService
@@ -131,7 +127,7 @@ export class CachedAuthenticationDecorator implements AuthenticationService {
     this.lruCache = LRU({
       max: maxLength,
       maxAge: maxAgeInSeconds * 1000
-    })
+    });
   }
 
   /**
@@ -140,14 +136,14 @@ export class CachedAuthenticationDecorator implements AuthenticationService {
   async validate(jwtToken: string): Promise<boolean> {
     try {
       if (this.lruCache.has(jwtToken)) {
-        return this.lruCache.get(jwtToken)
+        return this.lruCache.get(jwtToken);
       }
 
-      const result = await this.authenticationService.validate(jwtToken)
-      this.lruCache.set(jwtToken, result)
-      return result
+      const result = await this.authenticationService.validate(jwtToken);
+      this.lruCache.set(jwtToken, result);
+      return result;
     } catch (err) {
-      throw err
+      throw err;
     }
   }
 }

@@ -11,12 +11,12 @@ services:
       REDIS_PORT: 6379
       FORCE_HTTPS: disabled
       AUTH_API_URL: ${AUTH_API_URL}
-      EMAIL_DRIVER: ${EMAIL_DRIVER}
-      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
+      MAIL_DRIVER: ${MAIL_DRIVER}
+      MAILGUN_SECRET: ${MAILGUN_SECRET}
       MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
     ports:
-      - "3001"
-      - "4001"
+      - "3000"
+      - "4000"
     volumes:
       - ./:/usr/src/app
     links:

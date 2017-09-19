@@ -8,12 +8,12 @@ const {
   FORCE_HTTPS,
   AUTH_API_URL,
   AUTH_API_TIMEOUT
-} = process.env
+} = process.env;
 
 export default {
   server: {
-    port: parseInt(PORT, 10) || 3001,
-    httpsPort: parseInt(HTTPS_PORT, 10) || 4001,
+    port: parseInt(PORT, 10) || 3000,
+    httpsPort: parseInt(HTTPS_PORT, 10) || 4000,
     httpsServer: HTTPS_SERVER || 'disabled',
     forceHttps: FORCE_HTTPS || 'disabled'
   },
@@ -29,7 +29,7 @@ export default {
   },
   providers: {
     email: {
-      provider: process.env.EMAIL_DRIVER
+      provider: process.env.EMAIL_DRIVER || 'dummy'
     }
   }
-}
+};
