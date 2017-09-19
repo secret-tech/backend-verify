@@ -48,14 +48,14 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
    * Make HTTP/HTTPS request
    * @param jwtToken
    */
-  async private callVerifyJwtTokenMethodEndpoint(jwtToken: string): Promise<boolean> {
+  private async callVerifyJwtTokenMethodEndpoint(jwtToken: string): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       request.post({
         url: this.apiUrl,
         headers: {
-          'accept': 'application/json',
+          'accept': 'application/json'
         },
-        json: {token: jwtToken}
+        json: { token: jwtToken }
         // agentOptions: {
         //   cert: '',
         //   key: '',
@@ -114,6 +114,11 @@ export class JwtSingleInlineAuthenticationService implements AuthenticationServi
 export class CachedAuthenticationDecorator implements AuthenticationService {
   private lruCache: any
 
+  /**
+   * @param authenticationService
+   * @param maxAgeInSeconds
+   * @param maxLength
+   */
   constructor(private authenticationService: AuthenticationService, maxAgeInSeconds: number = 30, maxLength: number = 1000) {
     this.lruCache = LRU({
       max: maxLength,
@@ -121,6 +126,9 @@ export class CachedAuthenticationDecorator implements AuthenticationService {
     })
   }
 
+  /**
+   * @inheritdoc
+   */
   async validate(jwtToken: string): Promise<boolean> {
     try {
       if (this.lruCache.get(jwtToken)) {

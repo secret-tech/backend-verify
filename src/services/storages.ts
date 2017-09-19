@@ -1,6 +1,6 @@
-import { injectable } from "inversify";
-import * as redis from "redis";
-import { RedisClient } from "redis";
+import { injectable } from 'inversify'
+import * as redis from 'redis'
+import { RedisClient } from 'redis'
 import 'reflect-metadata'
 
 import config from '../config'
@@ -36,14 +36,14 @@ export class SimpleInMemoryStorageService implements StorageService {
       ttl: number;
       data: any;
     };
-  } = {};
+  } = {}
   private gcMinimalTimeInterval: number = 10
   private lastGcTime: number = this.getNextGcTime()
 
   set<T>(name: string, value: T, options: ValueOptions): Promise<T> {
     this.gc()
     this.storage[name] = {
-      ttl: options.ttlInSeconds + +new Date,
+      ttl: options.ttlInSeconds * 1000 + +new Date(),
       data: value
     }
     return Promise.resolve(value)
@@ -61,10 +61,10 @@ export class SimpleInMemoryStorageService implements StorageService {
   }
 
   gc() {
-    if (this.lastGcTime < +new Date) {
+    if (this.lastGcTime < +new Date()) {
       Object.keys(this.storage).forEach((key) => {
-        if (this.storage[key].ttl < +new Date) {
-          delete this.storage[key];
+        if (this.storage[key].ttl < +new Date()) {
+          delete this.storage[key]
         }
       })
       this.lastGcTime = this.getNextGcTime()
@@ -72,7 +72,7 @@ export class SimpleInMemoryStorageService implements StorageService {
   }
 
   private getNextGcTime(): number {
-    return this.gcMinimalTimeInterval * 1000 + (+new Date)
+    return this.gcMinimalTimeInterval * 1000 + (+new Date())
   }
 
 }
@@ -84,7 +84,8 @@ const redisConfig = config.redis
  */
 @injectable()
 export class RedisStorageService implements StorageService {
-  client: RedisClient
+
+  private client: RedisClient
 
   constructor() {
     this.client = redis.createClient(redisConfig.host, redisConfig.port)
@@ -111,4 +112,5 @@ export class RedisStorageService implements StorageService {
   getKey(key: string): string {
     return redisConfig.prefix + key
   }
+
 }

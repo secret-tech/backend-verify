@@ -11,7 +11,7 @@ const app: express.Application = express()
 describe('Auth Services', () => {
   describe('Test JwtSingleInlineAuthenticationService', () => {
     let instance: AuthenticationService
-    beforeEach(async() => {
+    before(async() => {
       container.rebind<AuthenticationService>(AuthenticationServiceType)
         .to(JwtSingleInlineAuthenticationService)
       instance = container.resolve(JwtSingleInlineAuthenticationService)
@@ -32,7 +32,7 @@ describe('Auth Services', () => {
 
   describe('Test ExternalHttpJwtAuthenticationService', () => {
     let instance: AuthenticationService
-    beforeEach(async() => {
+    before(async() => {
       container.rebind<AuthenticationService>(AuthenticationServiceType)
         .to(ExternalHttpJwtAuthenticationService)
       instance = container.resolve(ExternalHttpJwtAuthenticationService)

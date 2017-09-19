@@ -29,15 +29,15 @@ export class AuthMiddleware {
     try {
       const jwtToken = this.extractJwtFromRequstHeaders(req)
       if (!jwtToken || !await this.authenticationService.validate(jwtToken)) {
-        return responseWithError(res, 401, {error: 'Not Authorized'})
+        return responseWithError(res, 401, { error: 'Not Authorized' })
       }
       return next()
     } catch (error) {
-      return responseWithError(res, 500, {error})
+      return responseWithError(res, 500, { error })
     }
   }
 
-  private extractJwtFromRequstHeaders(req: Request): string|null {
+  private extractJwtFromRequstHeaders(req: Request): string | null {
     if (!req.headers.authorization) {
       return null
     }

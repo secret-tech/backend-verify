@@ -84,7 +84,7 @@ export class VerifiersController {
   }
 
   private responseSuccessfully(res: Response) {
-    res.json({status: 200})
+    res.json({ status: 200 })
   }
 
   private responseAsNotFound(res: Response) {

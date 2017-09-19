@@ -7,7 +7,7 @@ import { Response } from 'express'
  * @param responseJson
  */
 export function responseWithError(res: Response, status: number, responseJson: Object) {
-  return res.status(status).json(Object.assign({}, responseJson, {status: status}))
+  return res.status(status).json(Object.assign({}, responseJson, { status: status }))
 }
 
 /**

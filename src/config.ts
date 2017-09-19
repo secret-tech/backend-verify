@@ -11,8 +11,8 @@ const {
 
 export default {
   server: {
-    port: parseInt(PORT, 10) || 3000,
-    httpsPort: parseInt(HTTPS_PORT, 10) || 4000,
+    port: parseInt(PORT, 10) || 3001,
+    httpsPort: parseInt(HTTPS_PORT, 10) || 4001,
     httpsServer: HTTPS_SERVER || 'disabled',
     forceHttps: FORCE_HTTPS || 'disabled'
   },
@@ -24,5 +24,10 @@ export default {
     host: REDIS_HOST || 'localhost',
     database: REDIS_DATABASE || 0,
     prefix: 'jincor_verify_'
+  },
+  providers: {
+    email: {
+      provider: process.env.EMAIL_DRIVER
+    }
   }
 }

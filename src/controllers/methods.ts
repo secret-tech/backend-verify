@@ -41,9 +41,9 @@ export class MethodsController {
   )
   async initiate(req: MethodRequest, res: Response): Promise<void> {
     try {
-      const verificationService = this.verificationFactory.create(req.method)
+      const verificationService = this.verificationFactory.create(req.params.method)
       const verificationDetails = await verificationService.initiate(req.body)
-      res.json(Object.assign({}, verificationDetails, {status: 200}))
+      res.json(Object.assign({}, verificationDetails, { status: 200 }))
     } catch (err) {
       if (err instanceof InvalidParametersException) {
         responseWithError(res, 422, {

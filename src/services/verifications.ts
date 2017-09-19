@@ -1,7 +1,12 @@
-import { StorageService, StorageServiceType } from './storages';
 import { injectable, inject } from 'inversify'
+import * as crypto from 'crypto'
+import * as moment from 'moment'
 import * as uuid from 'node-uuid'
-import 'reflect-metadata';
+import 'reflect-metadata'
+
+import { StorageService, StorageServiceType } from './storages'
+import { EmailProviderService, EmailProviderServiceType, EmailProvider } from './providers/index'
+import config from '../config'
 
 export const VerificationServiceFactoryType = Symbol('VerificationServiceFactoryType')
 
@@ -19,6 +24,8 @@ export class InvalidParametersException extends VerificationException {
     super('Invalid request')
   }
 }
+
+// Types
 
 /**
  * VerificationService interface.
@@ -39,84 +46,162 @@ export interface VerificationServiceFactory {
   hasMethod(method: string): boolean
 }
 
+const EMAIL_VERIFICATION_METHOD = 'email'
+
 /**
  * VerificationServiceFactory implementation.
  */
 @injectable()
 export class VerificationServiceFactoryRegister {
-  constructor( @inject(StorageServiceType) private storageService: StorageService) {
+  constructor(
+    @inject(StorageServiceType) private storageService: StorageService,
+    @inject(EmailProviderServiceType) private emailProviderService: EmailProviderService
+  ) {
   }
 
+  /**
+   * Create concrete verificator service
+   *
+   * @param method
+   */
   create(method: string): VerificationService {
-    return new EmailVerificationService('email', this.storageService)
+    if (method !== EMAIL_VERIFICATION_METHOD) {
+      throw new InvalidParametersException(`${method} not supported`)
+    }
+
+    return new EmailVerificationService(EMAIL_VERIFICATION_METHOD, this.storageService, this.emailProviderService)
   }
 
+  /**
+   * Check supported method
+   * @param method
+   */
   hasMethod(method: string) {
-    return method === 'email'
+    return method.toLowerCase() === EMAIL_VERIFICATION_METHOD
   }
 }
 
+// @TODO: Rethink, may be is too weak algorithm here
+function generateCode(symbolSet: Array<string>, length: number) {
+  let stringWithAllSymbols = ''
+  let resultCode = ''
+
+  stringWithAllSymbols = symbolSet.map(element => {
+    switch (element) {
+      case 'alphas':
+        return 'abcdefghijklmnopqrstuvwxyz' // ~27%
+      case 'ALPHAS':
+        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ' // ~27%
+      case 'DIGITS':
+        return '01234567890123456789' // ~22% it's duplicated for uniform distribution
+      case 'SYMBOLS':
+        return '!@#$%^&*-+=|<>()[]{};:_' // ~24%
+      default:
+        return element
+    }
+  }).join('')
+
+  while (length--) {
+    resultCode += stringWithAllSymbols[crypto.randomBytes(1)[0] % stringWithAllSymbols.length]
+  }
+
+  return resultCode
+}
+
+// Types
+
+interface ParamsType {
+  consumer: string
+  template?: any
+  generateCode?: GenerateCodeType
+  policy: PolicyParamsType
+}
+
+interface PolicyParamsType {
+  forcedVerificationId?: string
+  forcedCode?: string
+  expiredOn: number
+}
+
+interface GenerateCodeType {
+  symbolSet: Array<string>
+  length: number
+}
+
 /**
- * Concreate EmailVerificationService.
+ * Concrete EmailVerificationService
  */
 export abstract class BaseVerificationService implements VerificationService {
+
+  /**
+   * Base constructor for verification service
+   *
+   * @param keyPrefix
+   * @param storageService
+   */
   constructor(protected keyPrefix: string, protected storageService: StorageService) {
   }
 
-  protected getAVerificationId(params: any): string {
-    if (params.policy.verificationId) {
+  /**
+   * Get or generate verificationId
+   *
+   * @param policyParams
+   */
+  protected getVerificationId(policyParams: PolicyParamsType): string {
+    if (policyParams.forcedVerificationId) {
       // @TODO: Add validation with usage of Joi
-      return params.policy.verificationId
+      return policyParams.forcedVerificationId
     }
+
     return uuid.v4()
   }
 
-  // @TODO: Rethink this weak algorithm, movout to helpers
-  protected getACode(params: any): string {
-    if (params.policy && params.policy.forceCode) {
-      return params.policy.forceCode
+  /**
+   * Get or generate code
+   *
+   * @param generateParams
+   * @param policyParams
+   */
+  protected getCode(generateParams: GenerateCodeType, policyParams: PolicyParamsType): string {
+    if (policyParams && policyParams.forcedCode) {
+      // @TODO: Add validation with usage of Joi
+      return policyParams.forcedCode
     }
 
-    const sourceSymbolSet = params.generateCode.symbolSet
-    let codeLength = params.generateCode.length,
-      symbolSet = '',
-      code = ''
-
-    symbolSet = sourceSymbolSet.map(element => {
-      if (element === 'alphas') {
-        return 'abcdefghijklmnopqrstuvwxyz'
-      }
-      if (element === 'ALPHAS') {
-        return 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-      }
-      if (element === 'DIGITS') {
-        return '0123456789'
-      }
-      if (element === 'SYMBOLS') {
-        return '!@#$%^&*-+=|<>()[]{};:_'
-      }
-      return element
-    }).join('')
-
-    while(codeLength--) {
-      code += symbolSet[~~(Math.random() * symbolSet.length)]
-    }
-
-    return code
+    return generateCode(generateParams.symbolSet, generateParams.length)
   }
 
-  async initiate(params: any): Promise<any> {
-    const TEMPORARY_HARDCODED_TTL = 60 * 60,
-      verificationId = this.keyPrefix + this.getAVerificationId(params),
-      result = await this.storageService
-        .set(verificationId, { code: this.getACode(params) }, { ttlInSeconds: TEMPORARY_HARDCODED_TTL })
+  /**
+   * Initiate verification process
+   *
+   * @param params
+   */
+  async initiate(params: ParamsType): Promise<any> {
+    const ttlInSeconds = moment.duration(params.policy.expiredOn).asSeconds()
+
+    if (!ttlInSeconds) {
+      throw new InvalidParametersException('expiredOn format is invalid')
+    }
+
+    const verificationId = this.getVerificationId(params.policy)
+    const code = this.getCode(params.generateCode, params.policy)
+
+    const result = await this.storageService
+      .set(this.keyPrefix + verificationId, { code }, { ttlInSeconds })
 
     return {
-      verificationId: verificationId,
-      expiredOn: ~~((+new Date + TEMPORARY_HARDCODED_TTL * 1000) / 1000)
+      code,
+      verificationId,
+      expiredOn: ~~((+new Date() + ttlInSeconds * 1000) / 1000)
     }
   }
 
+  /**
+   * Validate verificationId with passed code
+   *
+   * @param verificationId
+   * @param params
+   */
   async validate(verificationId: string, params: any): Promise<boolean> {
     const result = await this.storageService.get(this.keyPrefix + verificationId, null)
 
@@ -132,18 +217,72 @@ export abstract class BaseVerificationService implements VerificationService {
     return false
   }
 
+  /**
+   * Remove verificationId
+   *
+   * @param verificationId
+   */
   async remove(verificationId: string): Promise<boolean> {
     const result = await this.storageService.remove(this.keyPrefix + verificationId)
     return result !== null
   }
+
+}
+
+interface EmailTemplateType {
+  fromEmail: string
+  fromName?: string
+  subject: string
+  body: string
 }
 
 /**
- * Concreate EmailVerificationService.
+ * Concrete EmailVerificationService.
  */
 class EmailVerificationService extends BaseVerificationService {
-  async initiate(params: any): Promise<any> {
-    // @TODO: Send email here through provider
-    return super.initiate(params)
+
+  protected emailProvider: EmailProvider
+
+  /**
+   * Email verification specialization
+   *
+   * @param keyPrefix
+   * @param storageService
+   * @param emailProviderService
+   */
+  constructor(protected keyPrefix: string, protected storageService: StorageService,
+    protected emailProviderService: EmailProviderService
+  ) {
+    super(keyPrefix, storageService)
+
+    if (!config.providers.email.provider) {
+      throw new InvalidParametersException(`The environment variable EMAIL_DRIVER isn\'t set up`)
+    }
+
+    this.emailProvider = emailProviderService.getEmailProviderByName(config.providers.email.provider)
   }
+
+  /**
+   * @inheritdoc
+   */
+  async initiate(params: ParamsType): Promise<any> {
+    const templateParams: EmailTemplateType = params.template
+    let responseObject = await super.initiate(params)
+
+    // @TODO: The better solution is used external microservice for sending
+    await this.emailProvider.send(
+      `${templateParams.fromName || ''} <${templateParams.fromEmail}>`,
+      [params.consumer],
+      templateParams.subject || 'Verification Email',
+      templateParams.body
+        .replace(/{{{CODE}}}/g, responseObject.code)
+        .replace(/{{{VERIFICATION_ID}}}/g, responseObject.verificationId)
+    )
+
+    // @TODO: Remove code in production environment
+    // delete responseObject.code
+
+    return responseObject
+  }
+
 }
