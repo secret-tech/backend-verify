@@ -1,21 +1,57 @@
-import { Response, Request, NextFunction } from 'express'
-import { inject, injectable } from 'inversify'
+import { Response, Request, NextFunction } from 'express';
+import { inject, injectable } from 'inversify';
 
-import { VerificationServiceFactory, VerificationServiceFactoryType } from '../services/verifications'
+import { VerificationServiceFactory, VerificationServiceFactoryType } from '../services/verifications';
+import { AuthenticationService, AuthenticationServiceType, AuthenticationException } from '../services/auth';
+import { responseWithError } from '../helpers/responses';
 
-export const AuthMiddlewareType = Symbol('AuthMiddlewareType')
-export const SupportedMethodsMiddlewareType = Symbol('SupportedMethodsMiddlewareType')
+export const AuthMiddlewareType = Symbol('AuthMiddlewareType');
+export const SupportedMethodsMiddlewareType = Symbol('SupportedMethodsMiddlewareType');
+
+class NotAuthorizedException extends Error { }
 
 /**
  * Authentication middleware.
  */
 @injectable()
 export class AuthMiddleware {
-  constructor() {
+  constructor( @inject(AuthenticationServiceType) private authenticationService: AuthenticationService) {
   }
 
-  execute(req: Request, res: Response, next: NextFunction) {
-    return next()
+  /**
+   * Execute authentication
+   *
+   * @param req Request
+   * @param res Response
+   * @param next NextFunction
+   */
+  async execute(req: Request, res: Response, next: NextFunction) {
+    try {
+      const jwtToken = this.extractJwtFromRequstHeaders(req);
+      if (!jwtToken || !await this.authenticationService.validate(jwtToken)) {
+        return responseWithError(res, 401, { error: 'Not Authorized' });
+      }
+      return next();
+    } catch (error) {
+      if (error instanceof AuthenticationException) {
+        return responseWithError(res, 500, { error: error.message });
+      }
+      return responseWithError(res, 500, { error });
+    }
+  }
+
+  private extractJwtFromRequstHeaders(req: Request): string | null {
+    if (!req.headers.authorization) {
+      return null;
+    }
+
+    const parts = req.headers.authorization.split(' ');
+
+    if (parts[0] !== 'Bearer' || !parts[1]) {
+      return null;
+    }
+
+    return parts[1];
   }
 }
 
@@ -29,11 +65,9 @@ export class SupportedMethodsMiddleware {
 
   execute(req: Request, res: Response, next: NextFunction) {
     if (!this.verificationFactory.hasMethod(req.params.method)) {
-      return res.status(404).json({
-        error: 'Method not supported'
-      })
+      return responseWithError(res, 404, 'Method not supported');
     }
 
-    return next()
+    return next();
   }
 }

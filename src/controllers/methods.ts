@@ -1,18 +1,20 @@
-import { Request, Response } from 'express'
-import { inject, injectable } from 'inversify'
-import { controller, httpPost } from 'inversify-express-utils'
-import 'reflect-metadata'
+import { Request, Response } from 'express';
+import { inject, injectable } from 'inversify';
+import { controller, httpPost } from 'inversify-express-utils';
+import 'reflect-metadata';
+
+import { responseWithError, responseAsUnbehaviorError } from '../helpers/responses';
 
 import {
   InvalidParametersException,
   VerificationServiceFactory,
   VerificationServiceFactoryType
-} from '../services/verifications'
+} from '../services/verifications';
 
 interface MethodRequest extends Request {
   params: {
     method: string;
-  }
+  };
 }
 
 /**
@@ -39,26 +41,19 @@ export class MethodsController {
   )
   async initiate(req: MethodRequest, res: Response): Promise<void> {
     try {
-      const verificationService = this.verificationFactory.create(req.method)
-      const verificationDetails = await verificationService.initiate(req.body)
-      res.json(verificationDetails)
+      const verificationService = this.verificationFactory.create(req.params.method);
+      const verificationDetails = await verificationService.initiate(req.body);
+      res.json(Object.assign({}, verificationDetails, { status: 200 }));
     } catch (err) {
       if (err instanceof InvalidParametersException) {
-        res.status(422).send({
+        responseWithError(res, 422, {
           'error': err.name,
           'details': err.details
-        })
+        });
       } else {
-        this.responseAsUnbehaviorError(res, err)
+        responseAsUnbehaviorError(res, err);
       }
     }
   }
 
-  // @TODO: Moveout to helper
-  private responseAsUnbehaviorError(res: Response, err: Error) {
-    res.status(500).send({
-      'error': err.name,
-      'message': err.message
-    })
-  }
 }

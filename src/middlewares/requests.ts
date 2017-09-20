@@ -1,9 +1,10 @@
-import * as Joi from 'joi'
-import { Response, Request, NextFunction } from 'express'
+import { responseWithError } from '../helpers/responses';
+import * as Joi from 'joi';
+import { Response, Request, NextFunction } from 'express';
 
 const options = {
   allowUnknown: true
-}
+};
 
 const jsonSchemeInitiateRequest = Joi.object().keys({
   consumer: Joi.string().required(),
@@ -18,33 +19,33 @@ const jsonSchemeInitiateRequest = Joi.object().keys({
   }),
 
   policy: Joi.object({
-    expiredOn: Joi.string(),
+    expiredOn: Joi.string().required(),
     forcedVerificationId: Joi.string(),
     forcedCode: Joi.string()
   }).required()
-})
+});
 
 const jsonSchemeValidateRequest = Joi.object().keys({
   code: Joi.string().required()
-})
+});
 
 function commonFlowRequestMiddleware(scheme: Joi.Schema, req: Request, res: Response, next: NextFunction) {
-  const result = Joi.validate(req.body, scheme, options)
+  const result = Joi.validate(req.body, scheme, options);
 
   if (result.error) {
-    return res.status(422).json({
+    return responseWithError(res, 422, {
       'error': 'Invalid request',
       'details': result.value
-    })
+    });
   } else {
-    return next()
+    return next();
   }
 }
 
 export function initiateRequest(req: Request, res: Response, next: NextFunction) {
-  return commonFlowRequestMiddleware(jsonSchemeInitiateRequest, req, res, next)
+  return commonFlowRequestMiddleware(jsonSchemeInitiateRequest, req, res, next);
 }
 
 export function validateRequest(req: Request, res: Response, next: NextFunction) {
-  return commonFlowRequestMiddleware(jsonSchemeValidateRequest, req, res, next)
+  return commonFlowRequestMiddleware(jsonSchemeValidateRequest, req, res, next);
 }
