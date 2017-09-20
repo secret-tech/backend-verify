@@ -5,6 +5,8 @@ import * as express from 'express';
 import { MethodsController } from './controllers/methods';
 import { VerifiersController } from './controllers/verifiers';
 
+import config from './config';
+
 import * as commonMiddlewares from './middlewares/common';
 import * as validationMiddlewares from './middlewares/requests';
 import * as auths from './services/auth';
@@ -15,18 +17,30 @@ import * as verifications from './services/verifications';
 let container = new Container();
 
 // services
-container.bind<auths.AuthenticationService>(auths.AuthenticationServiceType)
-  .toDynamicValue((context: InversifyInterfaces.Context): auths.AuthenticationService => {
-    return new auths.CachedAuthenticationDecorator(
-      context.container.resolve(auths.ExternalHttpJwtAuthenticationService)
-    );
-  }).inSingletonScope();
+/* istanbul ignore else */
+if (config.environment.isTesting) {
+  container.bind<auths.AuthenticationService>(auths.AuthenticationServiceType)
+    .to(auths.JwtSingleInlineAuthenticationService);
+} else {
+  container.bind<auths.AuthenticationService>(auths.AuthenticationServiceType)
+    .toDynamicValue((context: InversifyInterfaces.Context): auths.AuthenticationService => {
+      return new auths.CachedAuthenticationDecorator(
+        context.container.resolve(auths.ExternalHttpJwtAuthenticationService)
+      );
+    }).inSingletonScope();
+}
 
 container.bind<providers.EmailProviderService>(providers.EmailProviderServiceType)
   .to(providers.EmailProviderService).inSingletonScope();
 
-container.bind<storages.StorageService>(storages.StorageServiceType)
-  .to(storages.RedisStorageService).inSingletonScope();
+/* istanbul ignore else */
+if (config.environment.isTesting) {
+  container.bind<storages.StorageService>(storages.StorageServiceType)
+    .to(storages.SimpleInMemoryStorageService).inSingletonScope();
+} else {
+  container.bind<storages.StorageService>(storages.StorageServiceType)
+    .to(storages.RedisStorageService).inSingletonScope();
+}
 
 container.bind<verifications.VerificationServiceFactory>(verifications.VerificationServiceFactoryType)
   .to(verifications.VerificationServiceFactoryRegister).inSingletonScope();
@@ -41,6 +55,7 @@ container.bind<commonMiddlewares.SupportedMethodsMiddleware>(commonMiddlewares.S
 const authMiddleware = container
   .get<commonMiddlewares.AuthMiddleware>(commonMiddlewares.AuthMiddlewareType);
 
+/* istanbul ignore next */
 container.bind<express.RequestHandler>('AuthMiddleware').toConstantValue(
   (req: any, res: any, next: any) => authMiddleware.execute(req, res, next)
 );
@@ -48,12 +63,9 @@ container.bind<express.RequestHandler>('AuthMiddleware').toConstantValue(
 const supportedMethodsMiddleware = container
   .get<commonMiddlewares.SupportedMethodsMiddleware>(commonMiddlewares.SupportedMethodsMiddlewareType);
 
+/* istanbul ignore next */
 container.bind<express.RequestHandler>('SupportedMethodsMiddleware').toConstantValue(
   (req: any, res: any, next: any) => supportedMethodsMiddleware.execute(req, res, next)
-);
-
-container.bind<express.RequestHandler>('MethodInitiateValidation').toConstantValue(
-  (req: any, res: any, next: any) => validationMiddlewares.initiateRequest(req, res, next)
 );
 
 // controllers

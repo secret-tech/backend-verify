@@ -65,7 +65,7 @@ export class SupportedMethodsMiddleware {
 
   execute(req: Request, res: Response, next: NextFunction) {
     if (!this.verificationFactory.hasMethod(req.params.method)) {
-      return responseWithError(res, 404, 'Method not supported');
+      return responseWithError(res, 404, { error: 'Method not supported' });
     }
 
     return next();

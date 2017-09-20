@@ -99,6 +99,7 @@ export class SimpleInMemoryStorageService implements StorageService {
    * Execute simple garbage collection
    */
   public gc() {
+    /* istanbul ignore if */
     if (this.lastGcTime < +new Date()) {
       Object.keys(this.storage).forEach((key) => {
         if (this.storage[key].ttl < +new Date()) {
@@ -126,7 +127,11 @@ export class RedisStorageService implements StorageService {
   private client: RedisClient;
 
   constructor() {
-    this.client = redis.createClient(
+    this.client = this.createRedisClient();
+  }
+
+  protected createRedisClient(): RedisClient {
+    return redis.createClient(
       redisConfig.port,
       redisConfig.host,
       {
@@ -186,6 +191,9 @@ export class RedisStorageService implements StorageService {
             return reject(new StorageException(err));
           }
           try {
+            if (!result) {
+              return resolve(defaultValue);
+            }
             resolve(JSON.parse(result));
           } catch (error) {
             reject(new StorageException(error));

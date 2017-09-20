@@ -35,6 +35,8 @@ export class DummyEmailProvider implements EmailProvider {
    * @inheritdoc
    */
   public send(sender: string, recipients: Array<string>, subject: string, text: string): Promise<any> {
+    console.log('SEND EMAIL HEAD: sender=%s recipients=%s subject=%s', sender, recipients, subject);
+    console.log('SEND EMAIL BODY:', text);
     return Promise.resolve({sender, recipients, subject});
   }
 }

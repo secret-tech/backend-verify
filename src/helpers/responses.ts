@@ -16,8 +16,8 @@ export function responseWithError(res: Response, status: number, responseJson: O
  * @param err
  */
 export function responseAsUnbehaviorError(res: Response, err: Error) {
-  responseWithError(res, 500, {
-    'error': err.name,
-    'message': err.message
+  return responseWithError(res, 500, {
+    'error': err && err.name || err,
+    'message': err && err.message || ''
   });
 }

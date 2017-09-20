@@ -48,6 +48,7 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
    * @param jwtToken
    */
   private async callVerifyJwtTokenMethodEndpoint(jwtToken: string): Promise<boolean> {
+    /* istanbul ignore next */
     return new Promise<boolean>((resolve, reject) => {
       request.post({
         url: this.apiUrl,

@@ -1,19 +1,20 @@
-import { AuthenticationService, AuthenticationServiceType, ExternalHttpJwtAuthenticationService, JwtSingleInlineAuthenticationService } from '../auth';
+import { AuthenticationService, AuthenticationServiceType, ExternalHttpJwtAuthenticationService, JwtSingleInlineAuthenticationService, CachedAuthenticationDecorator } from '../auth';
 import * as express from 'express';
 import * as chai from 'chai';
-import { container } from '../../ioc.container';
 import * as sinon from 'sinon';
+
+import { container } from '../../ioc.container';
 
 const {expect} = chai;
 
-const app: express.Application = express();
-
 describe('Auth Services', () => {
+
   describe('Test JwtSingleInlineAuthenticationService', () => {
     let instance: AuthenticationService;
-    before(async() => {
-      container.rebind<AuthenticationService>(AuthenticationServiceType)
-        .to(JwtSingleInlineAuthenticationService);
+    container.rebind<AuthenticationService>(AuthenticationServiceType)
+      .to(JwtSingleInlineAuthenticationService);
+
+    beforeEach(() => {
       instance = container.resolve(JwtSingleInlineAuthenticationService);
     });
 
@@ -32,22 +33,58 @@ describe('Auth Services', () => {
 
   describe('Test ExternalHttpJwtAuthenticationService', () => {
     let instance: AuthenticationService;
-    before(async() => {
-      container.rebind<AuthenticationService>(AuthenticationServiceType)
-        .to(ExternalHttpJwtAuthenticationService);
+    container.rebind<AuthenticationService>(AuthenticationServiceType)
+      .to(ExternalHttpJwtAuthenticationService);
+
+    beforeEach(async() => {
       instance = container.resolve(ExternalHttpJwtAuthenticationService);
     });
 
     it('will not validate empty JWT string', async() => {
       let mock = sinon.mock(instance);
-      mock.expects('callVerifyJwtTokenMethodEndpoint').once().returns(Promise.resolve(false));
+      mock.expects('callVerifyJwtTokenMethodEndpoint').never();
       expect(await instance.validate('')).is.false;
+      mock.verify();
     });
 
     it('will success validate not empty JWT string', async() => {
       let mock = sinon.mock(instance);
       mock.expects('callVerifyJwtTokenMethodEndpoint').once().returns(Promise.resolve(true));
       expect(await instance.validate('not empty string')).is.true;
+      mock.verify();
     });
   });
+
+  describe('Test CachedAuthenticationDecorator', () => {
+    let mock;
+
+    function createDecoratedInstance(returnResult: boolean) {
+      let instance = {
+        validate: (jwtToken: string): Promise<boolean> => Promise.resolve(returnResult)
+      };
+      mock = sinon.mock(instance);
+      mock.expects('validate').once().returns(Promise.resolve(returnResult));
+
+      return new CachedAuthenticationDecorator(instance);
+    }
+
+    it('will store successful validation result', async() => {
+      let decoratedInstance = createDecoratedInstance(true);
+
+      expect(await decoratedInstance.validate('TOKEN')).is.true;
+      expect(await decoratedInstance.validate('TOKEN')).is.true;
+
+      mock.verify();
+    });
+
+    it('will store failed validation result', async() => {
+      let decoratedInstance = createDecoratedInstance(false);
+
+      expect(await decoratedInstance.validate('TOKEN')).is.false;
+      expect(await decoratedInstance.validate('TOKEN')).is.false;
+
+      mock.verify();
+    });
+  });
+
 });
