@@ -27,13 +27,13 @@ describe('Verifications Services', () => {
     .to(SimpleInMemoryStorageService);
 
   describe('Test VerificationServiceFactoryRegister', () => {
-    let factory = container​​.resolve(VerificationServiceFactoryRegister);
+    let factory = container.resolve(VerificationServiceFactoryRegister);
 
-    it('will has email method', () => {
+    it('will have email method', () => {
       expect(factory.hasMethod('email')).is.true;
     });
 
-    it('will hasn\'t unknown method', () => {
+    it('will haven\'t unknown method', () => {
       expect(factory.hasMethod('unknown')).is.false;
     });
 
@@ -55,26 +55,26 @@ describe('Verifications Services', () => {
       expect(result.expiredOn).is.greaterThan(~~((+new Date()) / 1000));
     });
 
-    it('will fail initiation of verification process when expiredOn is invalid', async() => {
+    it('will fail initiation of verification process if expiredOn is invalid', async() => {
       expect(instance.initiate(createInitiateParams({
         policy: { expiredOn: null }
       }))).to.be.rejectedWith(InvalidParametersException);
     });
 
-    it('will fail initiation of verification process when generateCode not exists', async() => {
+    it('will fail initiation of verification process if generateCode not exists', async() => {
       expect(
         instance.initiate(createInitiateParams({policy: { forcedCode: undefined }}))
       ).to.be.rejectedWith(InvalidParametersException);
     });
 
-    it('will initiate of verification process when forcedVerificationId is set up', async() => {
+    it('will initiate of verification process if forcedVerificationId is set up', async() => {
       const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48912';
       expect((await instance.initiate(createInitiateParams({
         policy: { forcedVerificationId: forcedId }
       }))).verificationId).is.equals(forcedId);
     });
 
-    it('will initaite of verification process with a new generated digital code', async() => {
+    it('will initiate of verification process and return a new generated digital code', async() => {
       expect(
         /^[\d]{16}$/.test((await instance.initiate(createInitiateParams({
           generateCode: {
@@ -86,11 +86,11 @@ describe('Verifications Services', () => {
       ).is.true;
     });
 
-    it('will fail validation when verificationId isn\'t exits', async() => {
+    it('will fail validation if verificationId doesn\'t existing', async() => {
       expect(instance.validate('zzz', {code: '123'})).to.be.rejectedWith(NotFoundException);
     });
 
-    it('will fail validation when code is incorrect', async() => {
+    it('will fail validation if code is incorrect', async() => {
       const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48932';
       expect((await instance.initiate(createInitiateParams({
         policy: { forcedVerificationId: forcedId }
@@ -98,7 +98,7 @@ describe('Verifications Services', () => {
       expect(await instance.validate(forcedId, {code: '321'})).is.false;
     });
 
-    it('will validate when all is correct', async() => {
+    it('will successfully validate if all is correct', async() => {
       const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48932';
       expect((await instance.initiate(createInitiateParams({
         policy: { forcedVerificationId: forcedId }
@@ -109,10 +109,10 @@ describe('Verifications Services', () => {
   });
 
   describe('Test EmailVerificationService', () => {
-    let factory = container​​.resolve(VerificationServiceFactoryRegister);
+    let factory = container.resolve(VerificationServiceFactoryRegister);
     let instance: VerificationService = factory.create('email');
 
-    it('will initiate and send email', async() => {
+    it('will initiate and send an email', async() => {
       const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48932';
       expect(await instance.initiate(createInitiateParams({
         consumer: 'test@test.com',

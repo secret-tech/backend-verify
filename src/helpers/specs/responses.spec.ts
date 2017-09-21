@@ -18,14 +18,14 @@ describe('Helpers Responses', () => {
     mock.expects('json').once().returnsArg(0);
   });
 
-  it('will provide status code in the result json by responseWithError', () => {
+  it('will provide a status code in the result json by responseWithError', () => {
     expect(responseWithError(stubResponse as any, 404, { 'error': 'Not found' }))
       .is.deep.equals({ 'error': 'Not found', 'status': 404 });
 
     mock.verify();
   });
 
-  it('will provide status code and deailt in the result json by responseAsUnbehaviorError', () => {
+  it('will provide a status code and details in the result json by responseAsUnbehaviorError', () => {
     expect(responseAsUnbehaviorError(stubResponse as any, new Error('Message')))
       .is.deep.equals({ 'error': 'Error', 'message': 'Message', 'status' : 500 });
 

@@ -37,7 +37,7 @@ describe('Test Methods controller', () => {
     });
   });
 
-  it('will fail email verification process when no template body presents', (done) => {
+  it('will fail of initiation of email verification process if no template body presents', (done) => {
     const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';
     createRequest('/methods/email/actions/initiate', {
       consumer: 'test@test.com',

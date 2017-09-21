@@ -26,7 +26,7 @@ describe('Auth Services', () => {
       expect(await instance.validate('not empty string')).is.false;
     });
 
-    it('will success validate with JWT string', async() => {
+    it('will successfully validate with valid JWT string', async() => {
       expect(await instance.validate('TOKEN')).is.true;
     });
   });
@@ -47,7 +47,7 @@ describe('Auth Services', () => {
       mock.verify();
     });
 
-    it('will success validate not empty JWT string', async() => {
+    it('will successfully validate with valid JWT string', async() => {
       let mock = sinon.mock(instance);
       mock.expects('callVerifyJwtTokenMethodEndpoint').once().returns(Promise.resolve(true));
       expect(await instance.validate('not empty string')).is.true;
@@ -68,7 +68,7 @@ describe('Auth Services', () => {
       return new CachedAuthenticationDecorator(instance);
     }
 
-    it('will store successful validation result', async() => {
+    it('will store a success validation result', async() => {
       let decoratedInstance = createDecoratedInstance(true);
 
       expect(await decoratedInstance.validate('TOKEN')).is.true;
@@ -77,7 +77,7 @@ describe('Auth Services', () => {
       mock.verify();
     });
 
-    it('will store failed validation result', async() => {
+    it('will store a failed validation result', async() => {
       let decoratedInstance = createDecoratedInstance(false);
 
       expect(await decoratedInstance.validate('TOKEN')).is.false;

@@ -22,14 +22,14 @@ describe('Common Middlewares', () => {
       });
     });
 
-    it('will not authorize with JWT token that invalid formatted', (done) => {
+    it('will not authorize with JWT token that have invalid formatted', (done) => {
       request(app).get('/any-url').set('Authorization', 'InvalidHeaderValue').end((err, res) => {
         expect(res.status).to.equal(401);
         done();
       });
     });
 
-    it('will authorize with special JWT token in the header', (done) => {
+    it('will authorize with valid JWT token in the header', (done) => {
       request(app).get('/any-url').set('Authorization', 'Bearer TOKEN').end((err, res) => {
         expect(res.status).to.equal(404);
         done();

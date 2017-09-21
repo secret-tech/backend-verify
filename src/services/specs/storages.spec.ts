@@ -30,7 +30,7 @@ describe('Storages Services', () => {
   });
 
   describe('Test RedisStorageService', () => {
-    class StubRedisStorageService extends RedisStorageService​​ {
+    class StubRedisStorageService extends RedisStorageService {
       protected createRedisClient(): any {
         let items = {};
         return {
@@ -53,7 +53,7 @@ describe('Storages Services', () => {
         };
       }
     }
-    let instance = new StubRedisStorageService​​();
+    let instance = new StubRedisStorageService();
 
     testStorageImplementation(instance);
   });
