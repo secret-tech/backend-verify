@@ -19,7 +19,9 @@ app.use((req: Request, res: Response, next: NextFunction) => {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000');
   }
 
-  if (req.header('Accept') !== 'application/json' && req.header('Accept').indexOf('application/vnd.jincor+json;') !== 0) {
+  const acceptHeader = req.header('Accept') || '';
+
+  if (acceptHeader !== 'application/json' && acceptHeader.indexOf('application/vnd.jincor+json;') !== 0) {
     return res.status(406).json({
       error: 'Unsupported "Accept" header'
     });

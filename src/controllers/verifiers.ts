@@ -72,7 +72,9 @@ export class VerifiersController {
   async remove(req: VerifierRequest, res: Response): Promise<void> {
     try {
       const verificationService = this.verificationFactory.create(req.params.method);
-      await verificationService.remove(req.params.verificationId);
+      if (!await verificationService.remove(req.params.verificationId)) {
+        throw new NotFoundException();
+      }
       this.responseSuccessfully(res);
     } catch (err) {
       if (err instanceof NotFoundException) {

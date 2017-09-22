@@ -11,6 +11,9 @@ const {
 } = process.env;
 
 export default {
+  environment: {
+    isTesting: process.env.LOADED_MOCHA_OPTS === 'true'
+  },
   server: {
     port: parseInt(PORT, 10) || 3000,
     httpsPort: parseInt(HTTPS_PORT, 10) || 4000,

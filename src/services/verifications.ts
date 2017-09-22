@@ -7,6 +7,7 @@ import 'reflect-metadata';
 import { StorageService, StorageServiceType } from './storages';
 import { EmailProviderService, EmailProviderServiceType, EmailProvider } from './providers/index';
 import config from '../config';
+import * as Joi from 'joi';
 
 export const VerificationServiceFactoryType = Symbol('VerificationServiceFactoryType');
 
@@ -21,7 +22,8 @@ export class NotFoundException extends VerificationException {
 
 export class InvalidParametersException extends VerificationException {
   constructor(public details: any) {
-    super('Invalid request');
+    super(details);
+    this.name = 'Invalid request';
   }
 }
 
@@ -77,7 +79,7 @@ export class VerificationServiceFactoryRegister {
    * @param method
    */
   hasMethod(method: string) {
-    return method.toLowerCase() === EMAIL_VERIFICATION_METHOD;
+    return method && method.toLowerCase() === EMAIL_VERIFICATION_METHOD;
   }
 }
 
@@ -128,6 +130,39 @@ interface GenerateCodeType {
   length: number;
 }
 
+const jsonSchemeInitiateRequest = Joi.object().keys({
+  consumer: Joi.string().required().empty(),
+
+  template: Joi.object({}),
+
+  generateCode: Joi.object({}),
+
+  policy: Joi.object({
+    expiredOn: Joi.string().required().empty(),
+    forcedVerificationId: Joi.string().empty().guid(),
+    forcedCode: Joi.string().empty()
+  }).required()
+});
+
+const jsonSchemeInitiateRequestGenerateCode = Joi.object().keys({
+  length: Joi.number().greater(0).less(32).required(),
+  symbolSet: Joi.array().items(Joi.string().empty()).required()
+});
+
+const jsonSchemeInitiateRequestEmailTemplate = Joi.object().keys({
+  fromEmail: Joi.string().empty(),
+  fromName: Joi.string().empty(),
+  subject: Joi.string().empty(),
+  body: Joi.string().empty().required()
+});
+
+function validateObjectByJoiScheme(obj: any, scheme: Joi.Schema) {
+  const result = Joi.validate(obj || {}, scheme, { allowUnknown: true });
+  if (result.error) {
+    throw new InvalidParametersException(result.error && result.error.message || result.error);
+  }
+}
+
 /**
  * Concrete EmailVerificationService
  */
@@ -171,20 +206,27 @@ export abstract class BaseVerificationService implements VerificationService {
     return generateCode(generateParams.symbolSet, generateParams.length);
   }
 
+
   /**
    * Initiate verification process
    *
    * @param params
    */
   async initiate(params: ParamsType): Promise<any> {
+
+    validateObjectByJoiScheme(params, jsonSchemeInitiateRequest);
+
+    if (typeof params.policy.forcedCode === 'undefined') {
+      validateObjectByJoiScheme(params.generateCode, jsonSchemeInitiateRequestGenerateCode);
+    }
+
+    const verificationId = this.getVerificationId(params.policy);
+    const code = this.getCode(params.generateCode, params.policy);
     const ttlInSeconds = moment.duration(params.policy.expiredOn).asSeconds();
 
     if (!ttlInSeconds) {
       throw new InvalidParametersException('expiredOn format is invalid');
     }
-
-    const verificationId = this.getVerificationId(params.policy);
-    const code = this.getCode(params.generateCode, params.policy);
 
     const result = await this.storageService
       .set(this.keyPrefix + verificationId, { code }, { ttlInSeconds });
@@ -236,6 +278,10 @@ interface EmailTemplateType {
   body: string;
 }
 
+const jsonSchemeInitiateRequestValidEmailConsumer = Joi.object().keys({
+  consumer: Joi.string().email()
+});
+
 /**
  * Concrete EmailVerificationService.
  */
@@ -266,12 +312,23 @@ class EmailVerificationService extends BaseVerificationService {
    * @inheritdoc
    */
   async initiate(params: ParamsType): Promise<any> {
+    if (params.consumer) {
+      validateObjectByJoiScheme(params, jsonSchemeInitiateRequestValidEmailConsumer);
+    }
+    validateObjectByJoiScheme(params.template, jsonSchemeInitiateRequestEmailTemplate);
+
     const templateParams: EmailTemplateType = params.template;
     let responseObject = await super.initiate(params);
 
+    let emailFrom = templateParams.fromEmail || '';
+
+    if (templateParams.fromName) {
+      emailFrom = `${templateParams.fromName} <${emailFrom}>`;
+    }
+
     // @TODO: The better solution is used external microservice for sending
     await this.emailProvider.send(
-      `${templateParams.fromName || ''} <${templateParams.fromEmail}>`,
+      emailFrom,
       [params.consumer],
       templateParams.subject || 'Verification Email',
       templateParams.body

@@ -65,6 +65,6 @@ export class EmailProviderService {
       throw new NotFoundException(`${name} not found or it\'s duplicated`);
     }
 
-    return new providers[providerName[0]]();
+    return new providers[providerName[0]](process.env);
   }
 }
