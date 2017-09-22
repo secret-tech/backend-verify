@@ -8,7 +8,7 @@ The main responsibilities are:
 1. Interact with a service provider
 1. Validation of a received code
 
-Take a look at our [Wiki](wiki) for more details.
+Take a look at our [Wiki](../../wiki) for more details.
 
 API Endpoints Summary
 
