@@ -1,14 +1,16 @@
 # Jincor Verification Service
-![Jincor logo](https://raw.githubusercontent.com/JincorTech/backend-verify/master/Logo.png)
+![](https://habrastorage.org/webt/59/d5/42/59d542206afbe280817420.png)
 
 # Jincor VERIFY Service
 
-Jincor Verification is a service for verify users email, phone, and etc.
-The main responsibilities are:
-1. Interact with a service provider
-1. Validation of a received code
+Jincor Verification is a service for verification of users emails, phones, and so on.
 
-Take a look at our [Wiki](../../wiki) for more details.
+The main responsibilities are:
+1. Interact with a service provider (mailgun)
+1. Validation of a received code
+1. Storing the status of verification
+
+Take a look at our [Wiki](../../wiki) and [API DOCS](https://jincortech.github.io/backend-verify/) for more details.
 
 API Endpoints Summary
 
