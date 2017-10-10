@@ -95,7 +95,8 @@ describe('Verifications Services', () => {
       expect((await instance.initiate(createInitiateParams({
         policy: { forcedVerificationId: forcedId }
       }))).verificationId).is.equals(forcedId);
-      expect(await instance.validate(forcedId, {code: '321'})).is.false;
+      const isValid = (await instance.validate(forcedId, {code: '321'})).isValid;
+      expect(isValid).is.false;
     });
 
     it('will successfully validate if all is correct', async() => {
@@ -103,7 +104,9 @@ describe('Verifications Services', () => {
       expect((await instance.initiate(createInitiateParams({
         policy: { forcedVerificationId: forcedId }
       }))).verificationId).is.equals(forcedId);
-      expect(await instance.validate(forcedId, {code: '123'})).is.true;
+
+      const isValid = (await instance.validate(forcedId, {code: '123'})).isValid;
+      expect(isValid).is.true;
     });
 
   });

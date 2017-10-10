@@ -2,7 +2,7 @@ version: '2'
 services:
 
   verify:
-    image: registry.jincor.com/backend/verify:latest
+    image: registry.jincor.com/backend/verify-develop:latest
     build:
         context: ./
         dockerfile: Dockerfile

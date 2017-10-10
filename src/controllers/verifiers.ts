@@ -44,12 +44,13 @@ export class VerifiersController {
   async validate(req: VerifierRequest, res: Response): Promise<void> {
     try {
       const verificationService = this.verificationFactory.create(req.params.method);
-      if (!await verificationService.validate(req.params.verificationId, req.body)) {
+      const validationResult = await verificationService.validate(req.params.verificationId, req.body);
+      if (!validationResult.isValid) {
         responseWithError(res, 422, {
           'error': 'Invalid code'
         });
       } else {
-        this.responseSuccessfully(res);
+        this.responseSuccessfully(res, validationResult.verification);
       }
     } catch (err) {
       if (err instanceof NotFoundException) {
@@ -85,8 +86,11 @@ export class VerifiersController {
     }
   }
 
-  private responseSuccessfully(res: Response) {
-    res.json({ status: 200 });
+  private responseSuccessfully(res: Response, data?: any) {
+    res.json({
+      status: 200,
+      data: data
+    });
   }
 
   private responseAsNotFound(res: Response) {
