@@ -46,6 +46,9 @@ describe('Test Verifier controller', () => {
         code: forcedCode
       }).end((err, res) => {
         expect(res.status).is.equals(200);
+        expect(res.body.data.verificationId).is.equals('395a0e7d-3a1f-4d51-8dad-7d0229bd64ac');
+        expect(res.body.data.consumer).is.equals('test@test.com');
+        expect(res.body.data.expiredOn).to.be.an('number');
         done();
       });
     });

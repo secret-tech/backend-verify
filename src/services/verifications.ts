@@ -35,7 +35,7 @@ export class InvalidParametersException extends VerificationException {
 export interface VerificationService {
 
   initiate(params: any): Promise<any>;
-  validate(verificationId: string, params: any): Promise<boolean>;
+  validate(verificationId: string, params: any): Promise<ValidationResult>;
   remove(verificationId: string): Promise<boolean>;
 
 }
@@ -130,6 +130,16 @@ interface GenerateCodeType {
   length: number;
 }
 
+interface ValidationResult {
+  isValid: boolean;
+  verification?: {
+    id: string,
+    consumer: string,
+    attempts: number,
+    expiredOn: number
+  };
+}
+
 const jsonSchemeInitiateRequest = Joi.object().keys({
   consumer: Joi.string().required().empty(),
 
@@ -206,7 +216,6 @@ export abstract class BaseVerificationService implements VerificationService {
     return generateCode(generateParams.symbolSet, generateParams.length);
   }
 
-
   /**
    * Initiate verification process
    *
@@ -228,14 +237,16 @@ export abstract class BaseVerificationService implements VerificationService {
       throw new InvalidParametersException('expiredOn format is invalid');
     }
 
-    const result = await this.storageService
-      .set(this.keyPrefix + verificationId, { code }, { ttlInSeconds });
-
-    return {
-      code,
+    const data = {
       verificationId,
+      consumer: params.consumer,
+      code,
       expiredOn: ~~((+new Date() + ttlInSeconds * 1000) / 1000)
     };
+
+    await this.storageService.set(this.keyPrefix + verificationId, data, { ttlInSeconds });
+
+    return data;
   }
 
   /**
@@ -244,7 +255,7 @@ export abstract class BaseVerificationService implements VerificationService {
    * @param verificationId
    * @param params
    */
-  async validate(verificationId: string, params: any): Promise<boolean> {
+  async validate(verificationId: string, params: any): Promise<ValidationResult> {
     const result = await this.storageService.get(this.keyPrefix + verificationId, null);
 
     if (result === null) {
@@ -253,10 +264,16 @@ export abstract class BaseVerificationService implements VerificationService {
 
     if (result.code === params.code) {
       await this.remove(verificationId);
-      return true;
+      delete result.code;
+      return {
+        isValid: true,
+        verification: result
+      };
     }
 
-    return false;
+    return {
+      isValid: false
+    };
   }
 
   /**

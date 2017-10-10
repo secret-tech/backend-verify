@@ -1,11 +1,9 @@
-FROM mhart/alpine-node:6.11.0
+FROM mhart/alpine-node:8.6
 
-RUN mkdir -p /usr/src/app
-WORKDIR /usr/src/app
+RUN sed -i 's/^tty/#tty/' /etc/inittab
 
-ADD package.json /usr/src/app
-RUN npm i
-ADD . /usr/src/app
+VOLUME /usr/src/app
 EXPOSE 3000
 EXPOSE 4000
-CMD npm start
+WORKDIR /usr/src/app
+ENTRYPOINT ["/sbin/init"]
