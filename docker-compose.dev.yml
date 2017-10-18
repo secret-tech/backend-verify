@@ -2,7 +2,7 @@ version: '2'
 services:
 
   verify:
-    image: registry.jincor.com/backend/verify-develop:latest
+    image: registry.jincor.com/backend/verify:latest
     build:
         context: ./
         dockerfile: Dockerfile
@@ -10,20 +10,16 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       FORCE_HTTPS: disabled
-      AUTH_API_URL: ${AUTH_API_URL}
-      MAIL_DRIVER: ${MAIL_DRIVER}
-      MAILGUN_SECRET: ${MAILGUN_SECRET}
-      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
+      JWT_KEY: "uZrJ!xe*xN?!;oU.u*;QOSM+|=4C?WH?6eWPcK/6AkIXIVGQguSA*r"
+      THROTTLER_WHITE_LIST: "127.0.0.1"
     ports:
       - "3000"
       - "4000"
     volumes:
       - ./:/usr/src/app
-      - /usr/src/app/node_modules
     links:
       - redis
-
   redis:
-    image: jincorcto/backend-redis:stable
+    image: registry.jincor.com/backend/redis:latest
     ports:
       - "6379"
