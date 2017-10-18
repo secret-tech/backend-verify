@@ -23,6 +23,6 @@ services:
       - redis
 
   redis:
-    image: registry.jincor.com/backend/redis:latest
+    image: jincorcto/backend-redis:stable
     ports:
       - "6379"
