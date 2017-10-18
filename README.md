@@ -29,3 +29,4 @@ that was received from auth service.
 1. To install dependencies run: `docker-compose exec verify npm i`.
 1. To run tests run: `docker-compose exec verify npm test`.
 1. To build production image run `docker-compose -f docker-compose.prod.yml build --no-cache`.
+
