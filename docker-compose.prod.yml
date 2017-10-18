@@ -2,10 +2,10 @@ version: '2'
 services:
 
   verify:
-    image: registry.jincor.com/backend/verify-develop:latest
+    image: registry.jincor.com/backend/verify:latest
     build:
         context: ./
-        dockerfile: Dockerfile
+        dockerfile: Dockerfile.prod
     environment:
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -17,8 +17,6 @@ services:
     ports:
       - "3000"
       - "4000"
-    volumes:
-      - ./:/usr/src/app
     links:
       - redis
 

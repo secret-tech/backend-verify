@@ -1,19 +1,21 @@
-import { Request, Response } from 'express'
-import { inject, injectable } from 'inversify'
-import { controller, httpDelete, httpPost } from 'inversify-express-utils'
-import 'reflect-metadata'
+import { Request, Response } from 'express';
+import { inject, injectable } from 'inversify';
+import { controller, httpDelete, httpPost } from 'inversify-express-utils';
+import 'reflect-metadata';
+
+import { responseWithError, responseAsUnbehaviorError } from '../helpers/responses';
 
 import {
   NotFoundException,
   VerificationServiceFactory,
   VerificationServiceFactoryType
-} from '../services/verifications'
+} from '../services/verifications';
 
 interface VerifierRequest extends Request {
   params: {
     method: string;
     verificationId: string;
-  }
+  };
 }
 
 /**
@@ -41,19 +43,20 @@ export class VerifiersController {
   )
   async validate(req: VerifierRequest, res: Response): Promise<void> {
     try {
-      const verificationService = this.verificationFactory.create(req.params.method)
-      if (!await verificationService.validate(req.params.verificationId, req.body)) {
-        res.status(422).send({
+      const verificationService = this.verificationFactory.create(req.params.method);
+      const validationResult = await verificationService.validate(req.params.verificationId, req.body);
+      if (!validationResult.isValid) {
+        responseWithError(res, 422, {
           'error': 'Invalid code'
-        })
+        });
       } else {
-        res.json({})
+        this.responseSuccessfully(res, validationResult.verification);
       }
     } catch (err) {
       if (err instanceof NotFoundException) {
-        this.responseAsNotFound(res)
+        this.responseAsNotFound(res);
       } else {
-        this.responseAsUnbehaviorError(res, err)
+        responseAsUnbehaviorError(res, err);
       }
     }
   }
@@ -69,33 +72,30 @@ export class VerifiersController {
   )
   async remove(req: VerifierRequest, res: Response): Promise<void> {
     try {
-      // if (req.param('verificationId', null) === null) {
-      //   throw new NotFoundException()
-      // }
-      const verificationService = this.verificationFactory.create(req.params.method)
-      await verificationService.remove(req.params.verificationId)
-      res.json({})
+      const verificationService = this.verificationFactory.create(req.params.method);
+      if (!await verificationService.remove(req.params.verificationId)) {
+        throw new NotFoundException();
+      }
+      this.responseSuccessfully(res);
     } catch (err) {
       if (err instanceof NotFoundException) {
-        this.responseAsNotFound(res)
+        this.responseAsNotFound(res);
       } else {
-        this.responseAsUnbehaviorError(res, err)
+        responseAsUnbehaviorError(res, err);
       }
     }
   }
 
-  // @TODO: Moveout to helper
-  private responseAsNotFound(res: Response) {
-    res.status(404).send({
-      'error': 'Not found'
-    })
+  private responseSuccessfully(res: Response, data?: any) {
+    res.json({
+      status: 200,
+      data: data
+    });
   }
 
-  // @TODO: Moveout to helper
-  private responseAsUnbehaviorError(res: Response, err: Error) {
-    res.status(500).send({
-      'error': err.name,
-      'message': err.message
-    })
+  private responseAsNotFound(res: Response) {
+    responseWithError(res, 404, {
+      'error': 'Not found'
+    });
   }
 }
