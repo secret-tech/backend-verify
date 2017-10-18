@@ -5,3 +5,4 @@ coverage
 dist
 ts-node
 .idea
+.vscode
