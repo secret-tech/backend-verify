@@ -19,6 +19,7 @@ services:
       - "4000"
     volumes:
       - ./:/usr/src/app
+      - /usr/src/app/node_modules
     links:
       - redis
 
