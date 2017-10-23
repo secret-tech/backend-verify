@@ -4,11 +4,12 @@ import { inject, injectable } from 'inversify';
 import { VerificationServiceFactory, VerificationServiceFactoryType } from '../services/verifications';
 import { AuthenticationService, AuthenticationServiceType, AuthenticationException } from '../services/auth';
 import { responseWithError } from '../helpers/responses';
-
 export const AuthMiddlewareType = Symbol('AuthMiddlewareType');
 export const SupportedMethodsMiddlewareType = Symbol('SupportedMethodsMiddlewareType');
 
-class NotAuthorizedException extends Error { }
+export interface AuthorizedRequest extends Request {
+  tenant?: TenantVerificationResult;
+}
 
 /**
  * Authentication middleware.
@@ -25,12 +26,15 @@ export class AuthMiddleware {
    * @param res Response
    * @param next NextFunction
    */
-  async execute(req: Request, res: Response, next: NextFunction) {
+  async execute(req: AuthorizedRequest, res: Response, next: NextFunction) {
     try {
-      const jwtToken = this.extractJwtFromRequstHeaders(req);
-      if (!jwtToken || !await this.authenticationService.validate(jwtToken)) {
+      const jwtToken = this.extractJwtFromRequestHeaders(req);
+      const tenantData = await this.authenticationService.validate(jwtToken);
+      if (!jwtToken || !tenantData) {
         return responseWithError(res, 401, { error: 'Not Authorized' });
       }
+
+      req.tenant = tenantData;
       return next();
     } catch (error) {
       if (error instanceof AuthenticationException) {
@@ -40,7 +44,7 @@ export class AuthMiddleware {
     }
   }
 
-  private extractJwtFromRequstHeaders(req: Request): string | null {
+  private extractJwtFromRequestHeaders(req: Request): string | null {
     if (!req.headers.authorization) {
       return null;
     }
