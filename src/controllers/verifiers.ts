@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { controller, httpDelete, httpPost } from 'inversify-express-utils';
 import 'reflect-metadata';
-import NotFoundException from '../exceptions/not.found';
+import { NotFoundException } from '../exceptions/exceptions';
 import { responseWithError, responseAsUnbehaviorError } from '../helpers/responses';
 import { AuthorizedRequest } from '../middlewares/common';
 

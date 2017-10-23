@@ -3,8 +3,7 @@ import * as chai from 'chai';
 import { BaseVerificationService } from '../base.verification';
 import { container } from '../../ioc.container';
 import { VerificationServiceFactoryRegister } from '../verifications';
-import NotFoundException from '../../exceptions/not.found';
-import InvalidParametersException from '../../exceptions/invalid.parameters';
+import { NotFoundException, InvalidParametersException } from '../../exceptions/exceptions';
 import AuthenticatorVerificationService from '../authenticator.verification';
 import EmailVerificationService from '../email.verification';
 

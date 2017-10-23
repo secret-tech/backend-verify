@@ -1,8 +1,7 @@
 import * as moment from 'moment';
 import * as uuid from 'node-uuid';
-import NotFoundException from '../exceptions/not.found';
+import { NotFoundException, InvalidParametersException } from '../exceptions/exceptions';
 import * as crypto from 'crypto';
-import InvalidParametersException from '../exceptions/invalid.parameters';
 
 /**
  * BaseVerificationService

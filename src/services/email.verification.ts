@@ -1,7 +1,7 @@
 import { EmailProviderService, EmailProvider } from './providers/index';
 import { BaseVerificationService } from './base.verification';
 import config from '../config';
-import InvalidParametersException from '../exceptions/invalid.parameters';
+import { InvalidParametersException } from '../exceptions/exceptions';
 import * as Joi from 'joi';
 import { validateObjectByJoiScheme } from './helpers';
 

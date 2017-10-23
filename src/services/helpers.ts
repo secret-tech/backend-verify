@@ -1,5 +1,5 @@
 import * as Joi from 'joi';
-import InvalidParametersException from '../exceptions/invalid.parameters';
+import { InvalidParametersException } from '../exceptions/exceptions';
 
 export function validateObjectByJoiScheme(obj: any, scheme: Joi.Schema) {
   const result = Joi.validate(obj || {}, scheme, { allowUnknown: true });

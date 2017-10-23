@@ -2,7 +2,7 @@ import { Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { controller, httpPost } from 'inversify-express-utils';
 import 'reflect-metadata';
-import InvalidParametersException from '../exceptions/invalid.parameters';
+import { InvalidParametersException } from '../exceptions/exceptions';
 import { responseWithError, responseAsUnbehaviorError } from '../helpers/responses';
 import { AuthorizedRequest } from '../middlewares/common';
 

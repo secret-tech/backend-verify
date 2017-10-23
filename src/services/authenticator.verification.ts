@@ -1,5 +1,5 @@
 import * as authenticator from 'authenticator';
-import NotFoundException from '../exceptions/not.found';
+import { NotFoundException } from '../exceptions/exceptions';
 import { BaseVerificationService } from './base.verification';
 
 export default class AuthenticatorVerificationService extends BaseVerificationService {

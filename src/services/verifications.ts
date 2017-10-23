@@ -5,7 +5,7 @@ import AuthenticatorVerificationService from './authenticator.verification';
 import EmailVerificationService from './email.verification';
 import { StorageServiceType } from './storages';
 import { EmailProviderService, EmailProviderServiceType } from './providers/index';
-import InvalidParametersException from '../exceptions/invalid.parameters';
+import { InvalidParametersException } from '../exceptions/exceptions';
 
 export const VerificationServiceFactoryType = Symbol('VerificationServiceFactoryType');
 
