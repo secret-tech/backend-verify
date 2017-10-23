@@ -1,17 +1,17 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { controller, httpPost } from 'inversify-express-utils';
 import 'reflect-metadata';
-
+import InvalidParametersException from '../exceptions/invalid.parameters';
 import { responseWithError, responseAsUnbehaviorError } from '../helpers/responses';
+import { AuthorizedRequest } from '../middlewares/common';
 
 import {
-  InvalidParametersException,
   VerificationServiceFactory,
   VerificationServiceFactoryType
 } from '../services/verifications';
 
-interface MethodRequest extends Request {
+interface MethodRequest extends AuthorizedRequest {
   params: {
     method: string;
   };
@@ -37,12 +37,13 @@ export class MethodsController {
    */
   @httpPost(
     '/:method/actions/initiate',
-    'SupportedMethodsMiddleware'
+    'SupportedMethodsMiddleware',
+    'InitiateVerificationValidation'
   )
   async initiate(req: MethodRequest, res: Response): Promise<void> {
     try {
       const verificationService = this.verificationFactory.create(req.params.method);
-      const verificationDetails = await verificationService.initiate(req.body);
+      const verificationDetails = await verificationService.initiate(req.body, req.tenant);
       res.json(Object.assign({}, verificationDetails, { status: 200 }));
     } catch (err) {
       if (err instanceof InvalidParametersException) {

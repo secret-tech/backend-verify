@@ -1,17 +1,17 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { inject, injectable } from 'inversify';
 import { controller, httpDelete, httpPost } from 'inversify-express-utils';
 import 'reflect-metadata';
-
+import NotFoundException from '../exceptions/not.found';
 import { responseWithError, responseAsUnbehaviorError } from '../helpers/responses';
+import { AuthorizedRequest } from '../middlewares/common';
 
 import {
-  NotFoundException,
   VerificationServiceFactory,
   VerificationServiceFactoryType
 } from '../services/verifications';
 
-interface VerifierRequest extends Request {
+interface VerifierRequest extends AuthorizedRequest {
   params: {
     method: string;
     verificationId: string;
@@ -44,7 +44,7 @@ export class VerifiersController {
   async validate(req: VerifierRequest, res: Response): Promise<void> {
     try {
       const verificationService = this.verificationFactory.create(req.params.method);
-      const validationResult = await verificationService.validate(req.params.verificationId, req.body);
+      const validationResult = await verificationService.validate(req.params.verificationId, req.body, req.tenant);
       if (!validationResult.isValid) {
         responseWithError(res, 422, {
           'error': 'Invalid code'
