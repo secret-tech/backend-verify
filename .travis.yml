@@ -6,7 +6,7 @@ before_install:
 - chmod ugo+x ./build.sh
 script:
 - docker-compose build verify
-- docker-compose run --rm verify sh -c "npm test"
+- docker-compose run --rm verify sh -c "yarn && yarn test"
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ];  then echo "production"; elif ["$TRAVIS_BRANCH"
   == "develop"]; then echo "stage"; else echo "dev-$(git rev-parse --short HEAD)"
   ; fi`
