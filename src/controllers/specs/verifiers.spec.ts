@@ -1,17 +1,22 @@
-import * as express from 'express';
 import * as chai from 'chai';
-import * as bodyParser from 'body-parser';
-
-import { container } from '../../ioc.container';
 import app from '../../server';
-
-import { VerificationServiceFactoryRegister, VerificationService } from '../../services/verifications';
+import * as express from 'express';
+import * as TypeMoq from 'typemoq';
+import { container } from '../../ioc.container';
+import { InversifyExpressServer } from 'inversify-express-utils';
+import * as bodyParser from 'body-parser';
+import { VerificationServiceFactoryType, VerificationServiceFactory, VerificationServiceFactoryRegister } from '../../services/verifications';
+import AuthenticatorVerificationService from '../../services/authenticator.verification';
+import { SimpleInMemoryStorageService } from '../../services/storages';
+import * as authenticator from 'authenticator';
 
 chai.use(require('chai-http'));
-const {expect, request} = chai;
+const { expect, request } = chai;
 
-function createRequest(path: string, data: any, method: string = 'post') {
-  return request(app)[method](path)
+function createRequest(path: string, data: any, method: string = 'post', customApp?: any) {
+  const appToUse = customApp || app;
+
+  return request(appToUse)[method](path)
     .set('Accept', 'application/json')
     .set('Authorization', 'Bearer TOKEN').send(data);
 }
@@ -36,7 +41,7 @@ describe('Test Verifier controller', () => {
   const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';
   const forcedCode = '12345678';
 
-  it('will successfully validate verificationId and code', (done) => {
+  it('will successfully validate verificationId and code - email', (done) => {
 
     createInitiateEmailVerification(forcedId, forcedCode).end((err, res) => {
       expect(res.status).is.equals(200);
@@ -67,7 +72,7 @@ describe('Test Verifier controller', () => {
 
   });
 
-  it('will successfully removed verificationId', (done) => {
+  it('will successfully remove verificationId', (done) => {
 
     createInitiateEmailVerification(forcedId, forcedCode).end((err, res) => {
       expect(res.status).is.equals(200);
@@ -91,4 +96,44 @@ describe('Test Verifier controller', () => {
 
   });
 
+  it('will successfully validate verificationId and code - authenticator', (done) => {
+    const customApp = express();
+    const secret = {
+      secret: '3qlq j5uj gdcj xoqt 6rhu yglx 5mf5 i7ll',
+      verified: true
+    };
+    const verificationId = 'verificationId';
+    const verificationData = {
+      consumer: 'test@test.com'
+    };
+
+    const storageMock = TypeMoq.Mock.ofType(SimpleInMemoryStorageService);
+    storageMock.setup(x => x.get(TypeMoq.It.isValue(`test${ verificationId }`), TypeMoq.It.isAny()))
+      .returns(async(): Promise<any> => verificationData);
+
+    storageMock.setup(x => x.get(TypeMoq.It.isValue('testtenantIdtest@test.com'), TypeMoq.It.isAny()))
+      .returns(async(): Promise<any> => secret);
+
+    const authenticatorService = new AuthenticatorVerificationService('test', storageMock.object);
+
+    const factoryMock = TypeMoq.Mock.ofType(VerificationServiceFactoryRegister);
+
+    factoryMock.setup(x => x.create(TypeMoq.It.isAny()))
+      .returns(() => authenticatorService);
+
+    container.rebind<VerificationServiceFactory>(VerificationServiceFactoryType).toConstantValue(factoryMock.object);
+
+    customApp.use(bodyParser.json());
+    customApp.use(bodyParser.urlencoded({ extended: false }));
+
+    const server = new InversifyExpressServer(container, null, null, customApp);
+
+    createRequest(`/methods/google_auth/verifiers/${ verificationId }/actions/validate`, {
+      code: authenticator.generateToken(secret.secret)
+    }, 'post', server.build()).end((err, res) => {
+      expect(res.status).is.equals(200);
+      expect(res.body.data.consumer).is.eq('test@test.com');
+      done();
+    });
+  });
 });

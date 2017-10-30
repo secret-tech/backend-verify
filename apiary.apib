@@ -17,18 +17,23 @@ that was received from auth service.
 1. `/methods/{METHOD}/verifiers/{VERIFICATION_ID}/actions/validate [POST]`
 1. `/methods/{METHOD}/verifiers/{VERIFICATION_ID} [DELETE]`
 
+# Notes about google_auth
+1. When you initiate google_auth verification 1st time for selected consumer you will get `totpUri` to show QR code in your frontend app.
+2. The received secret will be **TEMPORARY** until you verify it first time. If secret is not verified at least 1 time and you `initiate` new google_auth verification for consumer - you will get **NEW** secret. It's required to ensure that user successfully stored the secret and entered correct code.
+3. When you want to disable 2FA - initiate verification and send `removeSecret=true` param to `validate` endpoint to remove consumer's secret.
+
 ## Verification: Initiate [/methods/{METHOD}/actions/initiate]
 
 Initiate verification process, with usage of specified *METHOD*.
 
 + Parameters
-    + METHOD (string) - One of *phone*, *email*, *google_auth*.
+    + METHOD (string) - One of *email*, *google_auth*, *phone* (not implemented).
 
 ### Initiate verification [POST]
 
 Example: email verification `/methods/email/actions/initiate`.
 Pass uuid in `policy.forcedVerificationId` to force using of your verification generated id.
-Set up own code in `policy.forcedCode` to force using of your verification code.
+Set up own code in `policy.forcedCode` to force using of your verification code (does not apply for google_auth method).
 
 + Request (application/json)
     + Headers
@@ -37,9 +42,10 @@ Set up own code in `policy.forcedCode` to force using of your verification code.
             Accept: application/vnd.jincor+json; version=1
 
     + Body
-    
+
             {
                 "consumer": "test@test.com",
+                "issuer": "Jincor",
                 "template": {
                     "body": "Click on the <a href=\"https://service/verify-email/5RkvAr0PUe708a?code={{{CODE}}}\">Verify Link</a> to continue registration."
                 },
@@ -64,11 +70,11 @@ Set up own code in `policy.forcedCode` to force using of your verification code.
 + Response 200 (application/json)
 
             {
-                "status": 200,
-                "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
-                "attempts": 0,
-                "expiredOn": 1505817462,
-                "barcode": "google_auth code"
+                "verificationId": "5028c0cd-07a9-4fa7-8d88-49edd2a44b72",
+                "consumer": "test@test.com",
+                "expiredOn": 1508689744,
+                "totpUri": "otpauth://totp/:test@test.com?secret=CK53DOA3R7B2ZDMZKVOM53ZPT355ORJI&issuer=&algorithm=SHA1&digits=6&period=30",
+                "status": 200
             }
 
 + Response 404 (application/json)
@@ -100,6 +106,9 @@ Set up own code in `policy.forcedCode` to force using of your verification code.
 Example: code validation for the email
 method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/validate`.
 
++ code `1234qwertA` (required)
++ removeSecret `true` (optional - use it to remove secret when you want to disable 2FA for consumer)
+
 + Request (application/json)
 
     + Headers
@@ -108,9 +117,10 @@ method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/va
             Accept: application/vnd.jincor+json; version=1
 
     + Body
-    
+
             {
-                "code": "JeDknKO0EZRBT6aFPrFQhzcCA2aqyVsHzZeJ8Vf"
+                "code": "JeDknKO0EZRBT6aFPrFQhzcCA2aqyVsHzZeJ8Vf",
+                "removeSecret": true
             }
  
 + Response 200 (application/json)

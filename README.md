@@ -25,8 +25,8 @@ that was received from auth service.
 
 1. Clone this repo.
 1. Run `docker-compose build --no-cache`.
+1. To install dependencies run: `docker-compose run --rm verify yarn`.
 1. Run `docker-compose up -d`.
-1. To install dependencies run: `docker-compose exec verify npm i`.
-1. To run tests run: `docker-compose exec verify npm test`.
+1. To run tests run: `docker-compose exec verify yarn test`.
 1. To build production image run `docker-compose -f docker-compose.prod.yml build --no-cache`.
 

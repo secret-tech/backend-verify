@@ -35,10 +35,10 @@ container.bind<providers.EmailProviderService>(providers.EmailProviderServiceTyp
 
 /* istanbul ignore else */
 if (config.environment.isTesting) {
-  container.bind<storages.StorageService>(storages.StorageServiceType)
+  container.bind<StorageService>(storages.StorageServiceType)
     .to(storages.SimpleInMemoryStorageService).inSingletonScope();
 } else {
-  container.bind<storages.StorageService>(storages.StorageServiceType)
+  container.bind<StorageService>(storages.StorageServiceType)
     .to(storages.RedisStorageService).inSingletonScope();
 }
 
@@ -66,6 +66,10 @@ const supportedMethodsMiddleware = container
 /* istanbul ignore next */
 container.bind<express.RequestHandler>('SupportedMethodsMiddleware').toConstantValue(
   (req: any, res: any, next: any) => supportedMethodsMiddleware.execute(req, res, next)
+);
+
+container.bind<express.RequestHandler>('InitiateVerificationValidation').toConstantValue(
+  (req: any, res: any, next: any) => validationMiddlewares.initiateVerification(req, res, next)
 );
 
 // controllers
