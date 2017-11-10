@@ -2,7 +2,7 @@
   service: verify
   command: npm test
 - name: deploy
-  service: auth
+  service: verify
   tag: master
   type: push
   image_name: registry.heroku.com/backend-verify/web
