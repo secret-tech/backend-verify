@@ -14,12 +14,6 @@ import {
 export class DummyEmailProvider implements EmailProvider {
 
   /**
-   * Initiate concrete provider instance
-   */
-  constructor() {
-  }
-
-  /**
    * Get name of concrete provider
    */
   public static getName() {

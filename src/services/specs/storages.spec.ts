@@ -1,9 +1,6 @@
-import { AuthenticationService, AuthenticationServiceType, ExternalHttpJwtAuthenticationService, JwtSingleInlineAuthenticationService, CachedAuthenticationDecorator } from '../auth';
-import * as express from 'express';
 import * as chai from 'chai';
-import * as sinon from 'sinon';
 
-import { SimpleInMemoryStorageService, StorageService, RedisStorageService } from '../storages';
+import { SimpleInMemoryStorageService, RedisStorageService } from '../storages';
 
 const {expect} = chai;
 

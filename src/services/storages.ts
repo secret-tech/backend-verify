@@ -14,44 +14,6 @@ export class StorageException extends Error { }
 export const StorageServiceType = Symbol('StorageServiceType');
 
 /**
- * Storage Options
- */
-export interface ValueOptions {
-  ttlInSeconds: number;
-}
-
-/**
- * StorageService interface.
- */
-export interface StorageService {
-
-  /**
-   * Set value
-   *
-   * @param name
-   * @param value
-   * @param options
-   */
-  set<T>(name: string, value: T, options: ValueOptions): Promise<T>;
-
-  /**
-   * Remove value
-   *
-   * @param name
-   */
-  remove<T>(name: string): Promise<T>;
-
-  /**
-   * Get value
-   *
-   * @param name
-   * @param defaultValue
-   */
-  get<T>(name: string, defaultValue: T): Promise<T>;
-
-}
-
-/**
  * Very simple memory storage implementation.
  */
 @injectable()
@@ -59,7 +21,7 @@ export class SimpleInMemoryStorageService implements StorageService {
 
   private storage: {
     [key: string]: {
-      ttl: number;
+      ttl?: number;
       data: any;
     };
   } = {};
@@ -69,12 +31,18 @@ export class SimpleInMemoryStorageService implements StorageService {
   /**
    * @inheritdoc
    */
-  public set<T>(name: string, value: T, options: ValueOptions): Promise<T> {
+  public set<T>(name: string, value: T, options?: ValueOptions): Promise<T> {
     this.gc();
-    this.storage[name] = {
-      ttl: options.ttlInSeconds * 1000 + +new Date(),
-      data: value
-    };
+    if (options) {
+      this.storage[name] = {
+        ttl: options.ttlInSeconds * 1000 + +new Date(),
+        data: JSON.stringify(value)
+      };
+    } else {
+      this.storage[name] = {
+        data: JSON.stringify(value)
+      };
+    }
     return Promise.resolve(value);
   }
 
@@ -82,7 +50,7 @@ export class SimpleInMemoryStorageService implements StorageService {
    * @inheritdoc
    */
   public remove<T>(name: string): Promise<T> {
-    const value = typeof this.storage[name] === 'undefined' ? null : this.storage[name].data;
+    const value = typeof this.storage[name] === 'undefined' ? null : JSON.parse(this.storage[name].data);
     delete this.storage[name];
     return Promise.resolve(value);
   }
@@ -92,7 +60,7 @@ export class SimpleInMemoryStorageService implements StorageService {
    */
   public get<T>(name: string, defaultValue: T): Promise<T> {
     this.gc();
-    return Promise.resolve(typeof this.storage[name] === 'undefined' ? defaultValue : this.storage[name].data);
+    return Promise.resolve(typeof this.storage[name] === 'undefined' ? defaultValue : JSON.parse(this.storage[name].data));
   }
 
   /**
@@ -102,7 +70,7 @@ export class SimpleInMemoryStorageService implements StorageService {
     /* istanbul ignore if */
     if (this.lastGcTime < +new Date()) {
       Object.keys(this.storage).forEach((key) => {
-        if (this.storage[key].ttl < +new Date()) {
+        if (this.storage[key].ttl && this.storage[key].ttl < +new Date()) {
           delete this.storage[key];
         }
       });
@@ -145,19 +113,33 @@ export class RedisStorageService implements StorageService {
   /**
    * @inheritdoc
    */
-  public set<T>(name: string, value: T, options: ValueOptions): Promise<T> {
-    return new Promise((resolve, reject) => {
-      this.client.setex(this.getKey(name),
-        options.ttlInSeconds,
-        JSON.stringify(value),
-        (err: any, result) => {
-          if (err) {
-            return reject(new StorageException(err));
+  public set<T>(name: string, value: T, options?: ValueOptions): Promise<T> {
+    if (options) {
+      return new Promise((resolve, reject) => {
+        this.client.setex(this.getKey(name),
+          options.ttlInSeconds,
+          JSON.stringify(value),
+          (err: any, result) => {
+            if (err) {
+              return reject(new StorageException(err));
+            }
+            resolve(value);
           }
-          resolve(value);
-        }
-      );
-    });
+        );
+      });
+    } else {
+      return new Promise((resolve, reject) => {
+        this.client.set(this.getKey(name),
+          JSON.stringify(value),
+          (err: any, result) => {
+            if (err) {
+              return reject(new StorageException(err));
+            }
+            resolve(value);
+          }
+        );
+      });
+    }
   }
 
   /**

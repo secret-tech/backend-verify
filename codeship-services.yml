@@ -1,0 +1,33 @@
+verify:
+  build:
+      image: registry.heroku.com/backend-verify/web
+      context: ./
+      dockerfile: Dockerfile.prod
+  environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      FORCE_HTTPS: disabled
+      AUTH_API_URL: ${AUTH_API_URL}
+      MAIL_DRIVER: ${MAIL_DRIVER}
+      MAILGUN_SECRET: ${MAILGUN_SECRET}
+      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
+  volumes:
+    - ./:/usr/src/app
+    - /usr/src/app/node_modules
+
+redis:
+    image: registry.jincor.com/backend/redis:latest
+    ports:
+      - "6379"
+
+
+herokudeployment:
+  image: codeship/heroku-deployment
+  encrypted_env_file: deployment.env.encrypted
+  volumes:
+    - ./:/deploy
+
+dockercfg_generator:
+  image: codeship/heroku-dockercfg-generator
+  add_docker: true
+  encrypted_env_file: deployment.env.encrypted

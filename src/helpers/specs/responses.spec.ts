@@ -10,8 +10,12 @@ describe('Helpers Responses', () => {
   let mock;
   beforeEach(() => {
     stubResponse = {
-      status: () => {},
-      json: () => {}
+      status: () => {
+        return 200;
+      },
+      json: () => {
+        return {};
+      }
     };
     mock = sinon.mock(stubResponse);
     mock.expects('status').once().returns(stubResponse);

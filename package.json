@@ -4,11 +4,10 @@
   "private": true,
   "scripts": {
     "start": "nodemon -w ./src -e ts ./src/bin/www --exec ts-node",
-    "lint": "tslint ./src/**/*.ts",
+    "lint": "tslint './src/**/*.ts'",
     "test": "nyc mocha ./src/**/*.spec.ts",
-    "build": "tsc --outDir dist",
-    "serve": "node ./dist/bin/www.js",
-    "shrinkwrap": "npm-shrinkwrap --dev"
+    "build": "tsc -p tsconfig.build.json --outDir dist",
+    "serve": "node ./dist/bin/www.js"
   },
   "nyc": {
     "exclude": [
@@ -17,6 +16,7 @@
   },
   "dependencies": {
     "@types/joi": "10.4.0",
+    "authenticator": "1.1.3",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "~1.15.2",
     "debug": "~2.2.0",
@@ -33,7 +33,8 @@
     "redis": "2.6.3",
     "reflect-metadata": "0.1.10",
     "request": "2.81.0",
-    "rolling-rate-limiter": "0.1.9"
+    "rolling-rate-limiter": "0.1.9",
+    "typemoq": "^2.0.1"
   },
   "devDependencies": {
     "@types/bcrypt-nodejs": "0.0.30",
@@ -58,7 +59,7 @@
     "nyc": "10.0.0",
     "sinon": "3.3.0",
     "ts-node": "2.0.0",
-    "tslint": "5.0.0",
+    "tslint": "5.7.0",
     "tslint-config-standard": "5.0.2",
     "typescript": "2.1.5"
   }

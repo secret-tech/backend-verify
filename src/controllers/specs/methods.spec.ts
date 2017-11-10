@@ -1,7 +1,4 @@
-import * as express from 'express';
 import * as chai from 'chai';
-import * as bodyParser from 'body-parser';
-
 import app from '../../server';
 
 chai.use(require('chai-http'));
@@ -33,6 +30,38 @@ describe('Test Methods controller', () => {
       expect(res.status).is.equals(200);
       expect(res.body.verificationId).is.equals(forcedId);
       expect(res.body.expiredOn).is.greaterThan(~~((+new Date()) / 1000));
+      done();
+    });
+  });
+
+  it('will initiate an authenticator verification process', (done) => {
+    const params = {
+      consumer: 'test@test.com',
+      issuer: 'Jincor',
+      policy: {
+        expiredOn: '00:01:00'
+      }
+    };
+
+    createRequest('/methods/google_auth/actions/initiate', params).end((err, res) => {
+      expect(res.status).is.equals(200);
+      expect(res.body).to.have.property('verificationId');
+      expect(res.body.expiredOn).is.greaterThan(~~((+new Date()) / 1000));
+      expect(res.body.totpUri).contains('otpauth://totp/Jincor:test@test.com?secret=');
+      done();
+    });
+  });
+
+  it('will require issuer param for google_auth initiate', (done) => {
+    const params = {
+      consumer: 'test@test.com',
+      policy: {
+        expiredOn: '00:01:00'
+      }
+    };
+
+    createRequest('/methods/google_auth/actions/initiate', params).end((err, res) => {
+      expect(res.status).is.equals(422);
       done();
     });
   });

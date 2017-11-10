@@ -1,0 +1,10 @@
+- name: test
+  service: verify
+  command: yarn test
+- name: deploy
+  service: verify
+  tag: master
+  type: push
+  image_name: registry.heroku.com/backend-verify/web
+  registry: registry.heroku.com
+  dockercfg_service: dockercfg_generator

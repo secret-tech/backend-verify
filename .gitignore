@@ -6,3 +6,5 @@ dist
 ts-node
 .idea
 .vscode
+
+codeship.aes

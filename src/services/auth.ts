@@ -1,6 +1,5 @@
 import * as LRU from 'lru-cache';
-import { Response, Request, NextFunction } from 'express';
-import { injectable, inject } from 'inversify';
+import { injectable } from 'inversify';
 import * as request from 'request';
 import 'reflect-metadata';
 
@@ -15,7 +14,7 @@ export class AuthenticationException extends Error { }
  */
 export interface AuthenticationService {
 
-  validate(jwtToken: string): Promise<boolean>;
+  validate(jwtToken: string): Promise<TenantVerificationResult>;
 
 }
 
@@ -28,16 +27,13 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
   private apiUrl: string = config.auth.url;
   private timeout: number = config.auth.timeout;
 
-  constructor() {
-  }
-
   /**
    * Validate JWT token
    * @param jwtToken
    */
-  async validate(jwtToken: string): Promise<boolean> {
+  async validate(jwtToken: string): Promise<TenantVerificationResult> {
     if (!jwtToken) {
-      return false;
+      return null;
     }
 
     return await this.callVerifyJwtTokenMethodEndpoint(jwtToken);
@@ -47,9 +43,9 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
    * Make HTTP/HTTPS request
    * @param jwtToken
    */
-  private async callVerifyJwtTokenMethodEndpoint(jwtToken: string): Promise<boolean> {
+  private async callVerifyJwtTokenMethodEndpoint(jwtToken: string): Promise<TenantVerificationResult> {
     /* istanbul ignore next */
-    return new Promise<boolean>((resolve, reject) => {
+    return new Promise<TenantVerificationResult>((resolve, reject) => {
       request.post({
         url: this.apiUrl,
         timeout: this.timeout,
@@ -76,7 +72,7 @@ export class ExternalHttpJwtAuthenticationService implements AuthenticationServi
           return reject(new AuthenticationException('JWT isn\'t type of tenant'));
         }
 
-        resolve(true);
+        resolve(body.decoded);
       });
     });
   }
@@ -104,13 +100,19 @@ export class JwtSingleInlineAuthenticationService implements AuthenticationServi
    * Validate JWT token
    * @param jwtToken
    */
-  async validate(jwtToken: string): Promise<boolean> {
+  async validate(jwtToken: string): Promise<TenantVerificationResult> {
     if (jwtToken !== this.storedToken) {
-      return false;
+      return null;
     }
-    return true;
+    return {
+      id: 'tenantId',
+      isTenant: true,
+      login: 'tenantLogin',
+      jti: '1234',
+      iat: 1234,
+      aud: '123'
+    };
   }
-
 }
 
 /**
@@ -134,7 +136,7 @@ export class CachedAuthenticationDecorator implements AuthenticationService {
   /**
    * @inheritdoc
    */
-  async validate(jwtToken: string): Promise<boolean> {
+  async validate(jwtToken: string): Promise<TenantVerificationResult> {
     try {
       if (this.lruCache.has(jwtToken)) {
         return this.lruCache.get(jwtToken);
