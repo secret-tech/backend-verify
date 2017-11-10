@@ -13,6 +13,7 @@ verify:
       MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
   volumes:
     - ./:/usr/src/app
+    - /usr/src/app/node_modules
 
 redis:
     image: registry.jincor.com/backend/redis:latest
