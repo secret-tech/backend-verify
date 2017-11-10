@@ -19,10 +19,11 @@ services:
       - "4000"
     volumes:
       - ./:/usr/src/app
+      - /usr/src/app/node_modules
     links:
       - redis
 
   redis:
-    image: registry.jincor.com/backend/redis:latest
+    image: jincorcto/backend-redis:stable
     ports:
       - "6379"
