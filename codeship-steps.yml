@@ -1,5 +1,5 @@
 - name: test
-  service: auth
+  service: verify
   command: npm test
 - name: deploy
   service: auth
