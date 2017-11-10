@@ -1,6 +1,6 @@
 - name: test
   service: verify
-  command: npm test
+  command: yarn && yarn test
 - name: deploy
   service: verify
   tag: master
