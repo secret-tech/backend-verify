@@ -24,6 +24,7 @@
     "inversify": "4.2.0",
     "inversify-express-utils": "4.0.0",
     "joi": "10.6.0",
+    "js-yaml": "^3.10.0",
     "jsonwebtoken": "^7.2.1",
     "lru-cache": "https://registry.npmjs.org/lru-cache/-/lru-cache-4.1.1.tgz",
     "mailcomposer": "4.0.2",
