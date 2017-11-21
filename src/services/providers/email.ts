@@ -107,3 +107,34 @@ export class MailgunEmailProvider implements EmailProvider {
     });
   }
 }
+
+export class MailjetEmailProvider implements EmailProvider {
+  private api: any;
+
+  /**
+   * Initiate concrete provider instance
+   */
+  constructor(config: any) {
+    this.api = require('node-mailjet').connect(config.MAILJET_API_KEY, config.MAILJET_API_SECRET);
+  }
+
+  /**
+   * @inheritdoc
+   */
+  public send(sender: string, recipients: string[], subject: string, text: string): Promise<any> {
+    const sendEmail = this.api.post('send');
+
+    const emailData = {
+      'FromEmail': sender,
+      'Subject': subject,
+      'Html-part': text,
+      'Recipients': [{'Email': recipients[0]}]
+    };
+
+    return sendEmail.request(emailData);
+  }
+
+  public static getName() {
+    return 'mailjet';
+  }
+}
