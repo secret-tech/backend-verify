@@ -10,20 +10,17 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       FORCE_HTTPS: disabled
-      AUTH_API_URL: ${AUTH_API_URL}
-      MAIL_DRIVER: ${MAIL_DRIVER}
-      MAILGUN_SECRET: ${MAILGUN_SECRET}
-      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
+      MAIL_DRIVER: dummy
+    tty: true
     ports:
       - "3000"
       - "4000"
     volumes:
       - ./:/usr/src/app
-      - /usr/src/app/node_modules
     links:
       - redis
 
   redis:
-    image: jincorcto/backend-redis:stable
+    image: jincort/backend-redis:production
     ports:
       - "6379"

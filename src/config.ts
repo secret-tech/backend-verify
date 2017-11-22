@@ -32,7 +32,7 @@ export default {
   },
   providers: {
     email: {
-      provider: process.env.EMAIL_DRIVER || 'dummy'
+      provider: process.env.MAIL_DRIVER || 'dummy'
     }
   }
 };
