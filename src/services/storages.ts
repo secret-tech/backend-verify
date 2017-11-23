@@ -100,13 +100,7 @@ export class RedisStorageService implements StorageService {
 
   protected createRedisClient(): RedisClient {
     return redis.createClient(
-      redisConfig.port,
-      redisConfig.host,
-      {
-        db: redisConfig.database
-        // retry_strategy: (s) => {}
-        // prefix: redisConfig.prefix
-      }
+      redisConfig.url
     );
   }
 
