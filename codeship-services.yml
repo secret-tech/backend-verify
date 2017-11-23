@@ -4,13 +4,9 @@ verify:
       context: ./
       dockerfile: Dockerfile.prod
   environment:
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
+      REDIS_URL: 'redis://redis:6379'
       FORCE_HTTPS: disabled
       MAIL_DRIVER: dummy
-  volumes:
-    - ./:/usr/src/app
-    - /usr/src/app/node_modules
 
 redis:
     image: registry.jincor.com/backend/redis:latest

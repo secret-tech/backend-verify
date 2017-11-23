@@ -1,7 +1,5 @@
 const {
-  REDIS_HOST,
-  REDIS_PORT,
-  REDIS_DATABASE,
+  REDIS_URL,
   PORT,
   HTTPS_PORT,
   HTTPS_SERVER,
@@ -25,9 +23,7 @@ export default {
     timeout: parseInt(AUTH_API_TIMEOUT, 10) || 5000
   },
   redis: {
-    port: parseInt(REDIS_PORT, 10) || 6379,
-    host: REDIS_HOST || 'localhost',
-    database: REDIS_DATABASE || '0',
+    url: REDIS_URL || 'redis://redis:6379',
     prefix: 'jincor_verify_'
   },
   providers: {
