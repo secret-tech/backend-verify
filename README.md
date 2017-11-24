@@ -29,3 +29,7 @@ that was received from auth service.
 1. To install dependencies run: `docker-compose exec verify yarn`.
 1. To run tests run: `docker-compose exec verify yarn test`.
 1. To build production image run `docker-compose -f docker-compose.prod.yml build --no-cache`.
+
+#How to generate docs?
+1. Install `npm install -g aglio`
+2. Generate `aglio --theme-variables cyborg --theme-template triple -i apiary.apib -o ./docs/index.html`
