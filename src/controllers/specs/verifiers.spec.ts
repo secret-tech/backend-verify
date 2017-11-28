@@ -38,6 +38,32 @@ function createInitiateEmailVerification(verificationId: string, code: string) {
   });
 }
 
+function mockStorageForGoogleAuth(secret, verificationId, verificationData) {
+  const customApp = express();
+
+  const storageMock = TypeMoq.Mock.ofType(SimpleInMemoryStorageService);
+  storageMock.setup(x => x.get(TypeMoq.It.isValue(`test${ verificationId }`), TypeMoq.It.isAny()))
+    .returns(async(): Promise<any> => verificationData);
+
+  storageMock.setup(x => x.get(TypeMoq.It.isValue('testtenantIdtest@test.com'), TypeMoq.It.isAny()))
+    .returns(async(): Promise<any> => secret);
+
+  const authenticatorService = new AuthenticatorVerificationService('test', storageMock.object);
+
+  const factoryMock = TypeMoq.Mock.ofType(VerificationServiceFactoryRegister);
+
+  factoryMock.setup(x => x.create(TypeMoq.It.isAny()))
+    .returns(() => authenticatorService);
+
+  container.rebind<VerificationServiceFactory>(VerificationServiceFactoryType).toConstantValue(factoryMock.object);
+
+  customApp.use(bodyParser.json());
+  customApp.use(bodyParser.urlencoded({ extended: false }));
+
+  const server = new InversifyExpressServer(container, null, null, customApp);
+  return server.build();
+}
+
 describe('Test Verifier controller', () => {
 
   const notExistsVerificationId = 'afde0e7d-3a1f-4d51-8dad-7d0229bd64c4';
@@ -60,6 +86,30 @@ describe('Test Verifier controller', () => {
         expect(res.body.data.payload).to.deep.eq({
           key: 'value'
         });
+        done();
+      });
+    });
+
+  });
+
+  it('will respond with 422 for incorrect code and increase attempts count - email', (done) => {
+
+    createInitiateEmailVerification(forcedId, forcedCode).end((err, res) => {
+      expect(res.status).is.equals(200);
+      expect(res.body.verificationId).is.equals(forcedId);
+
+      createRequest(`/methods/email/verifiers/${forcedId}/actions/validate`, {
+        code: '123456'
+      }).end((err, res) => {
+        expect(res.status).is.equals(422);
+        expect(res.body.data.verificationId).is.equals('395a0e7d-3a1f-4d51-8dad-7d0229bd64ac');
+        expect(res.body.data.consumer).is.equals('test@test.com');
+        expect(res.body.data.expiredOn).to.be.an('number');
+        expect(res.body.data.payload).to.deep.eq({
+          key: 'value'
+        });
+        expect(res.body.data.attempts).to.eq(1);
+        expect(res.body.data).to.not.have.property('code');
         done();
       });
     });
@@ -103,7 +153,6 @@ describe('Test Verifier controller', () => {
   });
 
   it('will successfully validate verificationId and code - authenticator', (done) => {
-    const customApp = express();
     const secret = {
       secret: '3qlq j5uj gdcj xoqt 6rhu yglx 5mf5 i7ll',
       verified: true
@@ -113,38 +162,48 @@ describe('Test Verifier controller', () => {
       consumer: 'test@test.com',
       payload: {
         key: 'value'
-      }
+      },
+      attempts: 0
     };
 
-    const storageMock = TypeMoq.Mock.ofType(SimpleInMemoryStorageService);
-    storageMock.setup(x => x.get(TypeMoq.It.isValue(`test${ verificationId }`), TypeMoq.It.isAny()))
-      .returns(async(): Promise<any> => verificationData);
-
-    storageMock.setup(x => x.get(TypeMoq.It.isValue('testtenantIdtest@test.com'), TypeMoq.It.isAny()))
-      .returns(async(): Promise<any> => secret);
-
-    const authenticatorService = new AuthenticatorVerificationService('test', storageMock.object);
-
-    const factoryMock = TypeMoq.Mock.ofType(VerificationServiceFactoryRegister);
-
-    factoryMock.setup(x => x.create(TypeMoq.It.isAny()))
-      .returns(() => authenticatorService);
-
-    container.rebind<VerificationServiceFactory>(VerificationServiceFactoryType).toConstantValue(factoryMock.object);
-
-    customApp.use(bodyParser.json());
-    customApp.use(bodyParser.urlencoded({ extended: false }));
-
-    const server = new InversifyExpressServer(container, null, null, customApp);
-
+    const testApp = mockStorageForGoogleAuth(secret, verificationId, verificationData);
     createRequest(`/methods/google_auth/verifiers/${ verificationId }/actions/validate`, {
       code: authenticator.generateToken(secret.secret)
-    }, 'post', server.build()).end((err, res) => {
+    }, 'post', testApp).end((err, res) => {
       expect(res.status).is.equals(200);
       expect(res.body.data.consumer).is.eq('test@test.com');
       expect(res.body.data.payload).to.deep.eq({
         key: 'value'
       });
+      done();
+    });
+  });
+
+  it('will respond with 422 for incorrect code and increase attempts count - authenticator', (done) => {
+    const secret = {
+      secret: '3qlq j5uj gdcj xoqt 6rhu yglx 5mf5 i7ll',
+      verified: true
+    };
+    const verificationId = 'verificationId';
+    const verificationData = {
+      consumer: 'test@test.com',
+      payload: {
+        key: 'value'
+      },
+      attempts: 0
+    };
+
+    const testApp = mockStorageForGoogleAuth(secret, verificationId, verificationData);
+    createRequest(`/methods/google_auth/verifiers/${ verificationId }/actions/validate`, {
+      code: authenticator.generateToken(secret.secret) + '1'
+    }, 'post', testApp).end((err, res) => {
+      expect(res.status).is.equals(422);
+      expect(res.body.data.consumer).is.eq('test@test.com');
+      expect(res.body.data.payload).to.deep.eq({
+        key: 'value'
+      });
+      expect(res.body.data.attempts).to.eq(1);
+      expect(res.body.data).to.not.have.property('code');
       done();
     });
   });

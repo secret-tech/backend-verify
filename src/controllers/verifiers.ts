@@ -47,7 +47,8 @@ export class VerifiersController {
       const validationResult = await verificationService.validate(req.params.verificationId, req.body, req.tenant);
       if (!validationResult.isValid) {
         responseWithError(res, 422, {
-          'error': 'Invalid code'
+          error: 'Invalid code',
+          data: validationResult.verification
         });
       } else {
         this.responseSuccessfully(res, validationResult.verification);

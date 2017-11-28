@@ -1,10 +1,10 @@
 declare interface ValidationResult {
   isValid: boolean;
   verification?: {
-    id: string,
-    consumer: string,
-    attempts: number,
-    expiredOn: number
+    id: string;
+    consumer: string;
+    attempts: number;
+    expiredOn: number;
   };
 }
 

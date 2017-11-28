@@ -72,6 +72,7 @@ export abstract class BaseVerificationService implements VerificationService {
       consumer: params.consumer,
       payload: params.payload,
       code,
+      attempts: 0,
       expiredOn: ~~((+new Date() + ttlInSeconds * 1000) / 1000)
     };
 
@@ -103,8 +104,13 @@ export abstract class BaseVerificationService implements VerificationService {
       };
     }
 
+    result.attempts += 1;
+    await this.storageService.set(this.keyPrefix + verificationId, result);
+
+    delete result.code;
     return {
-      isValid: false
+      isValid: false,
+      verification: result
     };
   }
 

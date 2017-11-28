@@ -28,8 +28,12 @@ export default class AuthenticatorVerificationService extends BaseVerificationSe
 
     const result = authenticator.verifyToken(secret.secret, params.code.toString());
     if (!result) {
+      verification.attempts += 1;
+      await this.storageService.set(`${ this.keyPrefix }${ verificationId }`, verification);
+
       return {
-        isValid: false
+        isValid: false,
+        verification
       };
     }
 
@@ -44,7 +48,7 @@ export default class AuthenticatorVerificationService extends BaseVerificationSe
     await this.storageService.remove(`${ this.keyPrefix }${ verificationId }`);
     return {
       isValid: true,
-      verification: verification
+      verification
     };
   }
 
