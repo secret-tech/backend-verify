@@ -132,12 +132,6 @@ method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/va
 + Response 200 (application/json)
 
         {
-            "status": 200
-        }
- 
-+ Response 200 (application/json)
-
-        {
             "status": 200,
             "data": {
               "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
@@ -145,9 +139,9 @@ method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/va
               "expiredOn": 1505817462,
               "payload": {
                   "your": "custom payload"
-              }
-            },
-            "details": {}
+              },
+              "attempts": 0
+            }
         }
  
 + Response 404 (application/json)
@@ -162,15 +156,54 @@ method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/va
         {
             "status": 422,
             "error": "Invalid code",
-            "attempts": 1
+            "data": {
+              "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
+              "consumer": "test@test.com",
+              "expiredOn": 1505817462,
+              "payload": {
+                  "your": "custom payload"
+              },
+              "attempts": 1
+            }
         }
 
 
-## Verification: Invalidate [/methods/{METHOD}/verifiers/{VERIFICATION_ID}]
+## Verifications [/methods/{METHOD}/verifiers/{VERIFICATION_ID}]
 
 + Parameters
     + METHOD (string) - One of *phone*, *email*, *google_auth*.
     + VERIFICATION_ID (string)
+
+### Get verification [GET]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer {JWT_TOKEN}
+            Accept: application/vnd.jincor+json; version=1
+
++ Response 200 (application/json)
+
+        {
+            "status": 200,
+            "data": {
+              "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
+              "consumer": "test@test.com",
+              "expiredOn": 1505817462,
+              "payload": {
+                  "your": "custom payload"
+              },
+              "attempts": 1
+            }
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": 404,
+            "error": "Not found"
+        }
 
 ### Invalidate the code [DELETE]
 
@@ -193,3 +226,4 @@ method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/va
             "status": 404,
             "error": "Not found"
         }
+

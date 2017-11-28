@@ -1,11 +1,14 @@
+declare interface VerificationData {
+  id: string;
+  consumer: string;
+  attempts: number;
+  expiredOn: number;
+  code?: string;
+}
+
 declare interface ValidationResult {
   isValid: boolean;
-  verification?: {
-    id: string,
-    consumer: string,
-    attempts: number,
-    expiredOn: number
-  };
+  verification?: VerificationData;
 }
 
 /**
@@ -53,6 +56,7 @@ declare interface VerificationService {
   initiate(params: any, tenantData: TenantVerificationResult): Promise<any>;
   validate(verificationId: string, params: any, tenantData: TenantVerificationResult): Promise<ValidationResult>;
   remove(verificationId: string): Promise<boolean>;
+  getVerification(verificationId: string): Promise<VerificationData>;
 }
 
 declare interface ParamsType {

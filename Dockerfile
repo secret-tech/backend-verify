@@ -1,4 +1,4 @@
-FROM mhart/alpine-node:8.5
+FROM mhart/alpine-node:8.9.1
 
 VOLUME /usr/src/app
 WORKDIR /usr/src/app
