@@ -16,7 +16,7 @@ export default class AuthenticatorVerificationService extends BaseVerificationSe
   }
 
   async validate(verificationId: string, params: any, tenantData: TenantVerificationResult): Promise<ValidationResult> {
-    const verification = await this.storageService.get(`${ this.keyPrefix }${ verificationId }`, null);
+    const verification = await this.getVerification(verificationId);
     if (verification === null) {
       throw new NotFoundException('Verification is not found');
     }

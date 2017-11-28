@@ -116,6 +116,35 @@ describe('Test Verifier controller', () => {
 
   });
 
+  it('will successfully get verification data - email', (done) => {
+
+    createInitiateEmailVerification(forcedId, forcedCode).end((err, res) => {
+      expect(res.status).is.equals(200);
+      expect(res.body.verificationId).is.equals(forcedId);
+
+      createRequest(`/methods/email/verifiers/${forcedId}`, null, 'get').end((err, res) => {
+        expect(res.status).is.equals(200);
+        expect(res.body.data.verificationId).is.equals('395a0e7d-3a1f-4d51-8dad-7d0229bd64ac');
+        expect(res.body.data.consumer).is.equals('test@test.com');
+        expect(res.body.data.expiredOn).to.be.an('number');
+        expect(res.body.data.payload).to.deep.eq({
+          key: 'value'
+        });
+        expect(res.body.data.attempts).to.eq(0);
+        expect(res.body.data).to.not.have.property('code');
+        done();
+      });
+    });
+
+  });
+
+  it('should respond with 404 if verification is not found - email', (done) => {
+    createRequest(`/methods/email/verifiers/randomId`, null, 'get').end((err, res) => {
+      expect(res.status).is.equals(404);
+      done();
+    });
+  });
+
   it('will fail validation if verificationId not exists', (done) => {
 
     createRequest(`/methods/email/verifiers/${notExistsVerificationId}/actions/validate`, {
