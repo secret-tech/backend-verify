@@ -59,6 +59,7 @@ declare interface ParamsType {
   consumer: string;
   template?: any;
   generateCode?: GenerateCodeType;
+  payload?: any;
   policy: PolicyParamsType;
 }
 

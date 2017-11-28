@@ -70,6 +70,7 @@ export abstract class BaseVerificationService implements VerificationService {
     const data = {
       verificationId,
       consumer: params.consumer,
+      payload: params.payload,
       code,
       expiredOn: ~~((+new Date() + ttlInSeconds * 1000) / 1000)
     };

@@ -31,6 +31,9 @@ function createInitiateEmailVerification(verificationId: string, code: string) {
       expiredOn: '00:01:00',
       forcedCode: code,
       forcedVerificationId: verificationId
+    },
+    payload: {
+      key: 'value'
     }
   });
 }
@@ -54,6 +57,9 @@ describe('Test Verifier controller', () => {
         expect(res.body.data.verificationId).is.equals('395a0e7d-3a1f-4d51-8dad-7d0229bd64ac');
         expect(res.body.data.consumer).is.equals('test@test.com');
         expect(res.body.data.expiredOn).to.be.an('number');
+        expect(res.body.data.payload).to.deep.eq({
+          key: 'value'
+        });
         done();
       });
     });
@@ -104,7 +110,10 @@ describe('Test Verifier controller', () => {
     };
     const verificationId = 'verificationId';
     const verificationData = {
-      consumer: 'test@test.com'
+      consumer: 'test@test.com',
+      payload: {
+        key: 'value'
+      }
     };
 
     const storageMock = TypeMoq.Mock.ofType(SimpleInMemoryStorageService);
@@ -133,6 +142,9 @@ describe('Test Verifier controller', () => {
     }, 'post', server.build()).end((err, res) => {
       expect(res.status).is.equals(200);
       expect(res.body.data.consumer).is.eq('test@test.com');
+      expect(res.body.data.payload).to.deep.eq({
+        key: 'value'
+      });
       done();
     });
   });
