@@ -21,7 +21,7 @@ that was received from auth service.
 1. `/methods/{METHOD}/verifiers/{VERIFICATION_ID}/actions/validate [POST]`
 1. `/methods/{METHOD}/verifiers/{VERIFICATION_ID} [DELETE]`
 
-#How to start development and run tests?
+## How to start development and run tests?
 
 1. Clone this repo.
 1. Run `docker-compose build --no-cache`.
@@ -29,3 +29,8 @@ that was received from auth service.
 1. To install dependencies run: `docker-compose exec verify yarn`.
 1. To run tests run: `docker-compose exec verify yarn test`.
 1. To build production image run `docker-compose -f docker-compose.prod.yml build --no-cache`.
+
+## How to generate docs?
+1. Install `npm install -g aglio`.
+1. Run `mkdir /usr/local/lib/node_modules/aglio/node_modules/aglio-theme-olio/cache`.
+1. Generate `aglio --theme-variables cyborg --theme-template triple -i apiary.apib -o ./docs/index.html`.

@@ -47,7 +47,7 @@ Set up own code in `policy.forcedCode` to force using of your verification code 
                 "consumer": "test@test.com",
                 "issuer": "Jincor",
                 "template": {
-                    "body": "Click on the <a href=\"https://service/verify-email/5RkvAr0PUe708a?code={{{CODE}}}\">Verify Link</a> to continue registration."
+                    "body": "Click on the <a href=\"https://service/verify-email/5RkvAr0PUe708a?code={{{CODE}}}&verificationId={{{VERIFICATION_ID}}}\">Verify Link</a> to continue registration."
                 },
                 "generateCode": {
                     "length": 32,
@@ -55,6 +55,9 @@ Set up own code in `policy.forcedCode` to force using of your verification code 
                 },
                 "policy": {
                     "expiredOn": "01:00:00"
+                },
+                "payload": {
+                    "your": "custom payload"
                 }
             }
 
@@ -64,7 +67,10 @@ Set up own code in `policy.forcedCode` to force using of your verification code 
                 "status": 200,
                 "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
                 "attempts": 0,
-                "expiredOn": 1505817462
+                "expiredOn": 1505817462,
+                "payload": {
+                    "your": "custom payload"
+                }
             }
 
 + Response 200 (application/json)
@@ -126,19 +132,16 @@ method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/va
 + Response 200 (application/json)
 
         {
-            "status": 200
-        }
- 
-+ Response 200 (application/json)
-
-        {
             "status": 200,
             "data": {
               "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
               "consumer": "test@test.com",
-              "expiredOn": 1505817462
-            },
-            "details": {}
+              "expiredOn": 1505817462,
+              "payload": {
+                  "your": "custom payload"
+              },
+              "attempts": 0
+            }
         }
  
 + Response 404 (application/json)
@@ -153,15 +156,54 @@ method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/va
         {
             "status": 422,
             "error": "Invalid code",
-            "attempts": 1
+            "data": {
+              "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
+              "consumer": "test@test.com",
+              "expiredOn": 1505817462,
+              "payload": {
+                  "your": "custom payload"
+              },
+              "attempts": 1
+            }
         }
 
 
-## Verification: Invalidate [/methods/{METHOD}/verifiers/{VERIFICATION_ID}]
+## Verifications [/methods/{METHOD}/verifiers/{VERIFICATION_ID}]
 
 + Parameters
     + METHOD (string) - One of *phone*, *email*, *google_auth*.
     + VERIFICATION_ID (string)
+
+### Get verification [GET]
+
++ Request (application/json)
+
+    + Headers
+
+            Authorization: Bearer {JWT_TOKEN}
+            Accept: application/vnd.jincor+json; version=1
+
++ Response 200 (application/json)
+
+        {
+            "status": 200,
+            "data": {
+              "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
+              "consumer": "test@test.com",
+              "expiredOn": 1505817462,
+              "payload": {
+                  "your": "custom payload"
+              },
+              "attempts": 1
+            }
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": 404,
+            "error": "Not found"
+        }
 
 ### Invalidate the code [DELETE]
 
@@ -184,3 +226,4 @@ method `/methods/email/verifiers/dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f/actions/va
             "status": 404,
             "error": "Not found"
         }
+

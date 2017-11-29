@@ -70,7 +70,9 @@ export abstract class BaseVerificationService implements VerificationService {
     const data = {
       verificationId,
       consumer: params.consumer,
+      payload: params.payload,
       code,
+      attempts: 0,
       expiredOn: ~~((+new Date() + ttlInSeconds * 1000) / 1000)
     };
 
@@ -87,7 +89,7 @@ export abstract class BaseVerificationService implements VerificationService {
    * @param tenantData
    */
   async validate(verificationId: string, params: any, tenantData: TenantVerificationResult): Promise<ValidationResult> {
-    const result = await this.storageService.get(this.keyPrefix + verificationId, null);
+    const result = await this.getVerification(verificationId);
 
     if (result === null) {
       throw new NotFoundException();
@@ -102,8 +104,13 @@ export abstract class BaseVerificationService implements VerificationService {
       };
     }
 
+    result.attempts += 1;
+    await this.storageService.set(this.keyPrefix + verificationId, result);
+
+    delete result.code;
     return {
-      isValid: false
+      isValid: false,
+      verification: result
     };
   }
 
@@ -115,6 +122,10 @@ export abstract class BaseVerificationService implements VerificationService {
   async remove(verificationId: string): Promise<boolean> {
     const result = await this.storageService.remove(this.keyPrefix + verificationId);
     return result !== null;
+  }
+
+  async getVerification(verificationId: string): Promise<VerificationData> {
+    return await this.storageService.get(this.keyPrefix + verificationId, null);
   }
 
   // @TODO: Rethink, may be is too weak algorithm here

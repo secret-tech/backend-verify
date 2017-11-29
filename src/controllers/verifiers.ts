@@ -1,6 +1,6 @@
 import { Response } from 'express';
 import { inject, injectable } from 'inversify';
-import { controller, httpDelete, httpPost } from 'inversify-express-utils';
+import { controller, httpDelete, httpPost, httpGet } from 'inversify-express-utils';
 import 'reflect-metadata';
 import { NotFoundException } from '../exceptions/exceptions';
 import { responseWithError, responseAsUnbehaviorError } from '../helpers/responses';
@@ -47,7 +47,8 @@ export class VerifiersController {
       const validationResult = await verificationService.validate(req.params.verificationId, req.body, req.tenant);
       if (!validationResult.isValid) {
         responseWithError(res, 422, {
-          'error': 'Invalid code'
+          error: 'Invalid code',
+          data: validationResult.verification
         });
       } else {
         this.responseSuccessfully(res, validationResult.verification);
@@ -86,10 +87,30 @@ export class VerifiersController {
     }
   }
 
+  /**
+   * Verify code for specified Verification Id.
+   *
+   * @param  req  express req object
+   * @param  res  express res object
+   */
+  @httpGet(
+    '/:verificationId'
+  )
+  async getVerification(req: VerifierRequest, res: Response): Promise<void> {
+    const verificationService = this.verificationFactory.create(req.params.method);
+    const verification = await verificationService.getVerification(req.params.verificationId);
+    if (verification) {
+      delete verification.code;
+      this.responseSuccessfully(res, verification);
+    } else {
+      this.responseAsNotFound(res);
+    }
+  }
+
   private responseSuccessfully(res: Response, data?: any) {
     res.json({
       status: 200,
-      data: data
+      data
     });
   }
 
