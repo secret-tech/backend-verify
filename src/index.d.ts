@@ -54,6 +54,7 @@ declare interface StorageService {
  */
 declare interface VerificationService {
   initiate(params: any, tenantData: TenantVerificationResult): Promise<any>;
+  resend(params: any, tenantData: TenantVerificationResult): Promise<any>;
   validate(verificationId: string, params: any, tenantData: TenantVerificationResult): Promise<ValidationResult>;
   remove(verificationId: string): Promise<boolean>;
   getVerification(verificationId: string): Promise<VerificationData>;

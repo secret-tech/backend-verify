@@ -8,3 +8,7 @@ export class InvalidParametersException extends Error {
 export class NotFoundException extends Error {
 
 }
+
+export class TimeoutException extends Error {
+
+}

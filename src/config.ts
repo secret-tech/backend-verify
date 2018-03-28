@@ -34,5 +34,8 @@ export default {
     email: {
       provider: process.env.MAIL_DRIVER || 'dummy'
     }
+  },
+  verify: {
+    timeout: process.env.LOADED_MOCHA_OPTS === 'true' ? 0 : 3600
   }
 };
