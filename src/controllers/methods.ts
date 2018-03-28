@@ -78,23 +78,29 @@ export class MethodsController {
       const resendDetails = await verificationService.resend(req.body, req.tenant);
       res.json(Object.assign({}, resendDetails, { status: 200 }));
     } catch (err) {
-      if (err instanceof InvalidParametersException) {
-        responseWithError(res, 422, {
-          'error': err.name,
-          'details': err.details
-        });
-      } else if (err instanceof TimeoutException) {
-        responseWithError(res, 403, {
-          'error': err.name,
-          'message': err.message
-        });
-      } else if (err instanceof NotFoundException) {
-        responseWithError(res, 404, {
-          'error': err.name,
-          'message': err.message
-        });
-      } else {
-        responseAsUnbehaviorError(res, err);
+
+      switch (err.constructor) {
+        case InvalidParametersException:
+          responseWithError(res, 422, {
+            'error': err.name,
+            'details': err.details
+          });
+          break;
+        case TimeoutException:
+          responseWithError(res, 403, {
+            'error': err.name,
+            'message': err.message
+          });
+          break;
+        case NotFoundException:
+          responseWithError(res, 404, {
+            'error': err.name,
+            'message': err.message
+          });
+          break;
+        default:
+          responseAsUnbehaviorError(res, err);
+          break;
       }
     }
   }

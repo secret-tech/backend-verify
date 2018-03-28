@@ -107,9 +107,9 @@ export abstract class BaseVerificationService implements VerificationService {
       throw new InvalidParametersException('expiredOn format is invalid');
     }
 
-    const expiredOn = ~~((+new Date() + ttlInSeconds * 1000) / 1000);
+    const expiredOn = (new Date().getTime() + ttlInSeconds * 1000) / 1000;
 
-    if ((expiredOn - verificationData.expiredOn) < config.verify.timeout) {
+    if ((expiredOn - verificationData.expiredOn) < config.verify.resend_timeout) {
       throw new TimeoutException('time of last send not yet pass');
     }
 

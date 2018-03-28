@@ -36,6 +36,6 @@ export default {
     }
   },
   verify: {
-    timeout: process.env.LOADED_MOCHA_OPTS === 'true' ? 0 : 3600
+    resend_timeout: process.env.LOADED_MOCHA_OPTS === 'true' ? 0 : 3600
   }
 };
