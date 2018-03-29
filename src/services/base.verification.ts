@@ -94,7 +94,7 @@ export abstract class BaseVerificationService implements VerificationService {
     const verificationData = await this.getVerification(verificationId);
 
     if (verificationData === null) {
-      throw new NotFoundException();
+      throw new NotFoundException('Verification data not found');
     }
 
     const code = verificationData.code;
@@ -110,7 +110,7 @@ export abstract class BaseVerificationService implements VerificationService {
     const expiredOn = (new Date().getTime() + ttlInSeconds * 1000) / 1000;
 
     if ((expiredOn - verificationData.expiredOn) < config.verify.resend_timeout) {
-      throw new TimeoutException('time of last send not yet pass');
+      throw new TimeoutException('Time of last send not yet pass');
     }
 
     const data = {

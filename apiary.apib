@@ -100,6 +100,83 @@ Set up own code in `policy.forcedCode` to force using of your verification code 
             ]
         }
 
+## Verification: Resend [/methods/{METHOD}/actions/resend]
+
+Resend verification process, with usage of specified *METHOD*.
+
++ Parameters
+    + METHOD (string) - One of *email*, *google_auth*(not implemented), *phone* (not implemented).
+
+### Resend verification [POST]
+
+Example: resend email verification `/methods/email/actions/resend`.
+
++ policy.forcedVerificationId `395a0e7d-3a1f-4d51-8dad-7d0229bd64ac` (required)
++ consumer `test@test.com` (required)
+
++ Request (application/json)
+    + Headers
+
+            Authorization: Bearer {JWT_TOKEN}
+            Accept: application/vnd.jincor+json; version=1
+
+    + Body
+
+            {
+                "consumer": "test@test.com",
+                "issuer": "Jincor",
+                "template": {
+                    "body": "Click on the <a href=\"https://service/verify-email/5RkvAr0PUe708a?code={{{CODE}}}&verificationId={{{VERIFICATION_ID}}}\">Verify Link</a> to continue registration."
+                },
+                "policy": {
+                    "expiredOn": "01:00:00",
+                    "forcedVerificationId": "395a0e7d-3a1f-4d51-8dad-7d0229bd64ac"
+                }
+            }
+
++ Response 200 (application/json)
+
+            {
+                "status": 200,
+                "verificationId": "dc910ae0-7c67-4ace-8ebb-9edd4b5d8b0f",
+                "consumer": "test@test.com",
+                "attempts": 0,
+                "expiredOn": 1505817462,
+                "payload": {
+                    "your": "custom payload"
+                }
+            }
+
++ Response 403 (application/json)
+
+        {
+            "status": 403,
+            "error": "Time of last send not yet pass"
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": 404,
+            "error": "Method not supported"
+        }
+
++ Response 404 (application/json)
+
+        {
+            "status": 404,
+            "error": "Verification data not found"
+        }
+
++ Response 422 (application/json)
+
+        {
+            "status": 422,
+            "error": "Invalid request",
+            "details": [
+                {"path": "policy.expiredOn", "error": "expiredOn format is invalid"}
+            ]
+        }
 
 ## Verification: Validate [/methods/{METHOD}/verifiers/{VERIFICATION_ID}/actions/validate]
 
