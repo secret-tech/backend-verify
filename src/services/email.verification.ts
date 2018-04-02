@@ -76,4 +76,39 @@ export default class EmailVerificationService extends BaseVerificationService {
 
     return responseObject;
   }
+
+  /**
+   * Resend verification email
+   *
+   * @param params
+   * @param tenantData
+   */
+  async resend(params: ParamsType, tenantData: TenantVerificationResult): Promise<any> {
+    if (params.consumer) {
+      validateObjectByJoiScheme(params, jsonSchemeInitiateRequestValidEmailConsumer);
+    }
+    validateObjectByJoiScheme(params.template, jsonSchemeInitiateRequestEmailTemplate);
+
+    const templateParams: EmailTemplateType = params.template;
+    let responseObject = await await super.resend(params, tenantData);
+
+    let emailFrom = templateParams.fromEmail || '';
+
+    if (templateParams.fromName) {
+      emailFrom = `${templateParams.fromName} <${emailFrom}>`;
+    }
+
+    await this.emailProvider.send(
+      emailFrom,
+      [params.consumer],
+      templateParams.subject || 'Verification Email',
+      templateParams.body
+        .replace(/{{{CODE}}}/g, responseObject.code)
+        .replace(/{{{VERIFICATION_ID}}}/g, responseObject.verificationId)
+    );
+
+    delete responseObject.code;
+
+    return responseObject;
+  }
 }

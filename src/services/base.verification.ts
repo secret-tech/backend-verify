@@ -1,7 +1,8 @@
 import * as moment from 'moment';
 import * as uuid from 'node-uuid';
-import { NotFoundException, InvalidParametersException } from '../exceptions/exceptions';
+import {NotFoundException, InvalidParametersException, TimeoutException} from '../exceptions/exceptions';
 import * as crypto from 'crypto';
+import config from '../config';
 
 /**
  * BaseVerificationService
@@ -77,6 +78,51 @@ export abstract class BaseVerificationService implements VerificationService {
     };
 
     await this.storageService.set(this.keyPrefix + verificationId, data, { ttlInSeconds });
+
+    return data;
+  }
+
+  /**
+   * Initiate resend verification process
+   *
+   * @param params
+   * @param tenantData
+   */
+  async resend(params: ParamsType, tenantData: TenantVerificationResult): Promise<any> {
+    const verificationId = this.getVerificationId(params.policy);
+
+    const verificationData = await this.getVerification(verificationId);
+
+    if (verificationData === null) {
+      throw new NotFoundException('Verification data not found');
+    }
+
+    const code = verificationData.code;
+
+    const attemps = verificationData.attempts;
+
+    const ttlInSeconds = moment.duration(params.policy.expiredOn).asSeconds();
+
+    if (!ttlInSeconds) {
+      throw new InvalidParametersException('expiredOn format is invalid');
+    }
+
+    const expiredOn = (new Date().getTime() + ttlInSeconds * 1000) / 1000;
+
+    if ((expiredOn - verificationData.expiredOn) < config.verify.resend_timeout) {
+      throw new TimeoutException('Time of last send not yet pass');
+    }
+
+    const data = {
+      verificationId,
+      consumer: params.consumer,
+      payload: params.payload,
+      code,
+      attempts: attemps,
+      expiredOn: expiredOn
+    }
+
+    await this.storageService.set(this.keyPrefix + verificationId, data, {ttlInSeconds});
 
     return data;
   }

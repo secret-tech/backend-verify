@@ -148,4 +148,103 @@ describe('Test Methods controller', () => {
     });
   });
 
+  it('will resend an email verification', (done) => {
+    const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';
+    createRequest('/methods/email/actions/resend', {
+      consumer: 'test@test.com',
+      template: {
+        fromName: 'Sender Name',
+        fromEmail: 'source@email.com',
+        body: 'body'
+      },
+      policy: {
+        expiredOn: '00:01:00',
+        forcedCode: '123456',
+        forcedVerificationId: forcedId
+      }
+    }).end((err, res) => {
+      expect(res.status).is.equals(200);
+      expect(res.body.verificationId).is.equals(forcedId);
+      expect(res.body.expiredOn).is.greaterThan(~~((+new Date()) / 1000));
+      done();
+    });
+  });
+
+  it('will fail resend an email with google_auth method', (done) => {
+    const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';
+    createRequest('/methods/google_auth/actions/resend', {
+      consumer: 'test@test.com',
+      template: {
+        fromName: 'Sender Name',
+        fromEmail: 'source@email.com',
+        body: 'body'
+      },
+      policy: {
+        expiredOn: '00:01:00',
+        forcedCode: '123456',
+        forcedVerificationId: forcedId
+      }
+    }).end((err, res) => {
+      expect(res.status).is.equals(422);
+      done();
+    });
+  });
+
+  it('will fail resend an email if consumer email is invalid', (done) => {
+    const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';
+    createRequest('/methods/email/actions/resend', {
+      consumer: null,
+      template: {
+        fromName: 'Sender Name',
+        fromEmail: 'source@email.com',
+        body: 'body'
+      },
+      policy: {
+        expiredOn: '00:01:00',
+        forcedCode: '123456',
+        forcedVerificationId: forcedId
+      }
+    }).end((err, res) => {
+      expect(res.status).is.equals(422);
+      done();
+    });
+  });
+
+  it('will fail resend an email if expiredOn is negative', (done) => {
+    const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';
+    createRequest('/methods/email/actions/resend', {
+      consumer: 'test@test.com',
+      template: {
+        fromName: 'Sender Name',
+        fromEmail: 'source@email.com',
+        body: 'body'
+      },
+      policy: {
+        expiredOn: '-01:00:00',
+        forcedCode: '123456',
+        forcedVerificationId: forcedId
+      }
+    }).end((err, res) => {
+      expect(res.status).is.equals(403);
+      done();
+    });
+  });
+
+  it('will fail resend an email if verificationId is not exist', (done) => {
+    createRequest('/methods/email/actions/resend', {
+      consumer: 'test@test.com',
+      template: {
+        fromName: 'Sender Name',
+        fromEmail: 'source@email.com',
+        body: 'body'
+      },
+      policy: {
+        expiredOn: '01:00:00',
+        forcedCode: '123456'
+      }
+    }).end((err, res) => {
+      expect(res.status).is.equals(404);
+      done();
+    });
+  });
 });

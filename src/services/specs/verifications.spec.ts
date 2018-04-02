@@ -3,7 +3,7 @@ import * as chai from 'chai';
 import { BaseVerificationService } from '../base.verification';
 import { container } from '../../ioc.container';
 import { VerificationServiceFactoryRegister } from '../verifications';
-import { NotFoundException, InvalidParametersException } from '../../exceptions/exceptions';
+import {NotFoundException, InvalidParametersException, TimeoutException} from '../../exceptions/exceptions';
 import AuthenticatorVerificationService from '../authenticator.verification';
 import EmailVerificationService from '../email.verification';
 
@@ -137,6 +137,72 @@ describe('Verifications Services', () => {
       expect(isValid).is.eq(true);
     });
 
+    it('will return resend verification data', async() => {
+      const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48912';
+      const initiateParams = createInitiateParams({
+        consumer: 'test@test.com',
+        template: {
+          'body': '[{{{CODE}}}]'
+        },
+        policy: { forcedVerificationId: forcedId }
+      });
+
+      const result = await instance.resend(initiateParams, tenantData);
+
+      expect(result).to.have.property('verificationId');
+      expect(result).is.property('verificationId').equals(forcedId);
+      expect(result).to.have.property('consumer');
+      expect(result).to.have.property('payload');
+      expect(result).to.have.property('code');
+      expect(result).is.property('code').equals('123');
+      expect(result).to.have.property('attempts');
+      expect(result).to.have.property('expiredOn');
+    });
+
+    it('will fail resend process if verificationId is wrong', async() => {
+      const forcedId = 'wrong';
+      const initiateParams = createInitiateParams({
+        consumer: 'test@test.com',
+        template: {
+          'body': '[{{{CODE}}}]'
+        },
+        policy: { forcedVerificationId: forcedId }
+      });
+
+      expect(instance.resend(initiateParams, tenantData)).to.be.rejectedWith(NotFoundException);
+    });
+
+    it('will fail resend process if expiredOn is invalid', async() => {
+      const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48912';
+      const initiateParams = createInitiateParams({
+        consumer: 'test@test.com',
+        template: {
+          'body': '[{{{CODE}}}]'
+        },
+        policy: {
+          forcedVerificationId: forcedId,
+          expiredOn: 'wrong'
+        }
+      });
+
+      expect(instance.resend(initiateParams, tenantData)).to.be.rejectedWith(InvalidParametersException);
+    });
+
+    it('will fail resend process if expiredOn is negative', async() => {
+      const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48912';
+      const initiateParams = createInitiateParams({
+        consumer: 'test@test.com',
+        template: {
+          'body': '[{{{CODE}}}]'
+        },
+        policy: {
+          forcedVerificationId: forcedId,
+          expiredOn: '-01:00:00'
+        }
+      });
+
+      expect(instance.resend(initiateParams, tenantData)).to.be.rejectedWith(TimeoutException);
+    });
   });
 
   describe('Test EmailVerificationService', () => {
@@ -154,6 +220,91 @@ describe('Verifications Services', () => {
       });
 
       expect(await instance.initiate(initiateParams, tenantData)).is.property('verificationId').equals(forcedId);
+    });
+
+    it('will resend an email verification', async() => {
+      const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48932';
+      const initiateParams = createInitiateParams({
+        consumer: 'test@test.com',
+        template: {
+          body: '[{{{CODE}}}]'
+        },
+        policy: { forcedVerificationId: forcedId }
+      });
+      const result = await instance.resend(initiateParams, tenantData);
+
+      expect(result).is.property('verificationId').equals(forcedId);
+      expect(result).to.have.property('consumer');
+      expect(result).to.have.property('payload');
+      expect(result).to.have.property('attempts');
+      expect(result).to.have.property('expiredOn');
+      expect(result).not.have.property('code');
+
+    });
+
+    it('will resend an email verification with fromEmail and fromName', async() => {
+      const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48932';
+      const initiateParams = createInitiateParams({
+        consumer: 'test@test.com',
+        template: {
+          fromName: 'Sender Name',
+          fromEmail: 'source@email.com',
+          body: '[{{{CODE}}}]'
+        },
+        policy: { forcedVerificationId: forcedId }
+      });
+      const result = await instance.resend(initiateParams, tenantData);
+
+      expect(result).is.property('verificationId').equals(forcedId);
+      expect(result).to.have.property('consumer');
+      expect(result).to.have.property('payload');
+      expect(result).to.have.property('attempts');
+      expect(result).to.have.property('expiredOn');
+      expect(result).not.have.property('code');
+
+    });
+
+    it('will fail resend an email verification if consumer email is invalid', async() => {
+      const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48932';
+      const initiateParams = createInitiateParams({
+        consumer: 'wrong',
+        template: {
+          'body': '[{{{CODE}}}]'
+        },
+        policy: { forcedVerificationId: forcedId }
+      });
+      const result = instance.resend(initiateParams, tenantData);
+
+      expect(result).to.be.rejectedWith(InvalidParametersException);
+    });
+
+    it('will fail resend an email verification if expiredOn is invalid', async() => {
+      const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48932';
+      const params = createInitiateParams({
+        consumer: 'test@test.com',
+        template: {
+          'body': '[{{{CODE}}}]'
+        },
+        policy: {
+          forcedVerificationId: forcedId,
+          expiredOn: null
+        }
+      });
+
+      expect(instance.resend(params, tenantData)).to.be.rejectedWith(InvalidParametersException);
+    });
+
+    it('will fail resend an email verification if no template body presents', async() => {
+      const forcedId = '886aa661-1fdb-4f29-b8e1-85ab6fc48932';
+      const params = createInitiateParams({
+        consumer: 'test@test.com',
+        template: null,
+        policy: {
+          forcedVerificationId: forcedId,
+        }
+      });
+
+      expect(instance.resend(params, tenantData)).to.be.rejectedWith(InvalidParametersException);
     });
 
   });
