@@ -1,14 +1,23 @@
 FROM mhart/alpine-node:8.9.1
 
-RUN apk update && apk add bash && rm -rf /var/cache/apk/*
-
-RUN mkdir -p /usr/src/app
-ADD . /usr/src/app
-
 WORKDIR /usr/src/app
 
-RUN yarn
-RUN mkdir ./dist
-RUN npm run build
+COPY . .
+COPY custom-entrypoint.sh /usr/local/bin/custom-entrypoint.sh
 
-CMD npm run serve
+RUN chmod 755 /usr/local/bin/custom-entrypoint.sh && \
+    addgroup verify && \
+    adduser -D -H -G verify verify && \
+    apk add --update --no-cache bash
+
+RUN yarn && \
+    npm run build && \
+    yarn install --prod
+
+EXPOSE 3000
+EXPOSE 4000
+
+USER verify
+
+ENTRYPOINT ["/usr/local/bin/custom-entrypoint.sh"]
+CMD ["npm", "run", "serve"]
