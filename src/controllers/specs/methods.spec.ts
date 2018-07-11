@@ -130,6 +130,16 @@ describe('Test Methods controller', () => {
     });
   });
 
+  it('will fail initiation process with wrong method', (done) => {
+    createRequest('/methods/wrong/actions/initiate', {
+      consumer: 'test@test.com'
+    }).end((err, res) => {
+      expect(res.status).is.equals(404);
+      expect(res.body.error).is.equals('Method not supported');
+      done();
+    });
+  });
+
   it('will fail of initiation of email verification process if no template body presents', (done) => {
     const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';
     createRequest('/methods/email/actions/initiate', {
@@ -174,6 +184,7 @@ describe('Test Methods controller', () => {
     const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';
     createRequest('/methods/google_auth/actions/resend', {
       consumer: 'test@test.com',
+      issuer: 'Jincor',
       template: {
         fromName: 'Sender Name',
         fromEmail: 'source@email.com',

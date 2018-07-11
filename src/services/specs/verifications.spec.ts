@@ -1,9 +1,9 @@
-import { SimpleInMemoryStorageService, StorageServiceType } from '../storages';
+import { SimpleInMemoryStorageService, StorageService, StorageServiceType } from '../storages';
 import * as chai from 'chai';
 import { BaseVerificationService } from '../base.verification';
 import { container } from '../../ioc.container';
-import { VerificationServiceFactoryRegister } from '../verifications';
-import {NotFoundException, InvalidParametersException, TimeoutException} from '../../exceptions/exceptions';
+import { VerificationService, VerificationServiceFactoryRegister } from '../verifications';
+import { NotFoundException, InvalidParametersException, TimeoutException } from '../../exceptions/exceptions';
 import AuthenticatorVerificationService from '../authenticator.verification';
 import EmailVerificationService from '../email.verification';
 

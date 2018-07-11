@@ -3,6 +3,44 @@ import * as uuid from 'node-uuid';
 import {NotFoundException, InvalidParametersException, TimeoutException} from '../exceptions/exceptions';
 import * as crypto from 'crypto';
 import config from '../config';
+import { VerificationService } from './verifications';
+import { StorageService } from './storages';
+import { TenantVerificationResult } from '../middlewares/common';
+
+/**
+ * Interfaces
+ */
+export interface VerificationData {
+  id: string;
+  consumer: string;
+  attempts: number;
+  expiredOn: number;
+  code?: string;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  verification?: VerificationData;
+}
+
+interface GenerateCodeType {
+  symbolSet: Array<string>;
+  length: number;
+}
+
+interface PolicyParamsType {
+  forcedVerificationId?: string;
+  forcedCode?: string;
+  expiredOn: string;
+}
+
+export interface ParamsType {
+  consumer: string;
+  template?: any;
+  generateCode?: GenerateCodeType;
+  payload?: any;
+  policy: PolicyParamsType;
+}
 
 /**
  * BaseVerificationService

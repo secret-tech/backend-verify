@@ -1,11 +1,7 @@
-import * as express from 'express';
 import * as chai from 'chai';
-import * as sinon from 'sinon';
-
 import { DummyEmailProvider, MailgunEmailProvider } from '../email';
-import { InvalidParametersException } from '../index';
 
-const {expect} = chai;
+const { expect } = chai;
 
 describe('Email Providers', () => {
 

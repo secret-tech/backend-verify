@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import * as express from 'express';
 import { Response, Request, NextFunction, Application } from 'express';
 import * as bodyParser from 'body-parser';

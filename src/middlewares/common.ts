@@ -7,6 +7,15 @@ import { responseWithError } from '../helpers/responses';
 export const AuthMiddlewareType = Symbol('AuthMiddlewareType');
 export const SupportedMethodsMiddlewareType = Symbol('SupportedMethodsMiddlewareType');
 
+export interface TenantVerificationResult {
+  id: string;
+  login: string;
+  jti: string;
+  iat: number;
+  aud: string;
+  isTenant: boolean;
+}
+
 export interface AuthorizedRequest extends Request {
   tenant?: TenantVerificationResult;
 }

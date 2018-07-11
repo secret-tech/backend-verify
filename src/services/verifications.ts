@@ -3,9 +3,22 @@ import 'reflect-metadata';
 
 import AuthenticatorVerificationService from './authenticator.verification';
 import EmailVerificationService from './email.verification';
-import { StorageServiceType } from './storages';
+import { StorageService, StorageServiceType } from './storages';
 import { EmailProviderService, EmailProviderServiceType } from './providers/index';
 import { InvalidParametersException } from '../exceptions/exceptions';
+import { ValidationResult, VerificationData } from './base.verification';
+import { TenantVerificationResult } from '../middlewares/common';
+
+/**
+ * Interfaces
+ * */
+export interface VerificationService {
+  initiate(params: any, tenantData: TenantVerificationResult): Promise<any>;
+  resend(params: any, tenantData: TenantVerificationResult): Promise<any>;
+  validate(verificationId: string, params: any, tenantData: TenantVerificationResult): Promise<ValidationResult>;
+  remove(verificationId: string): Promise<boolean>;
+  getVerification(verificationId: string): Promise<VerificationData>;
+}
 
 export const VerificationServiceFactoryType = Symbol('VerificationServiceFactoryType');
 

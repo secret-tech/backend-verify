@@ -1,9 +1,21 @@
 import { EmailProviderService, EmailProvider } from './providers/index';
-import { BaseVerificationService } from './base.verification';
+import { BaseVerificationService, ParamsType } from './base.verification';
 import config from '../config';
 import { InvalidParametersException } from '../exceptions/exceptions';
 import * as Joi from 'joi';
 import { validateObjectByJoiScheme } from './helpers';
+import { StorageService } from './storages';
+import { TenantVerificationResult } from '../middlewares/common';
+
+/**
+ * Interfaces
+ */
+interface EmailTemplateType {
+  fromEmail: string;
+  fromName?: string;
+  subject: string;
+  body: string;
+}
 
 export const jsonSchemeInitiateRequestValidEmailConsumer = Joi.object().keys({
   consumer: Joi.string().email()

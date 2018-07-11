@@ -1,6 +1,15 @@
 import * as authenticator from 'authenticator';
 import { NotFoundException } from '../exceptions/exceptions';
-import { BaseVerificationService } from './base.verification';
+import { BaseVerificationService, ValidationResult } from './base.verification';
+import { TenantVerificationResult } from '../middlewares/common';
+
+/**
+ * Interfaces
+ */
+interface AuthenticatorSecret {
+  secret: string;
+  verified: boolean;
+}
 
 export default class AuthenticatorVerificationService extends BaseVerificationService {
   async initiate(params: any, tenantData: TenantVerificationResult): Promise<any> {

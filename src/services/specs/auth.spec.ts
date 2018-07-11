@@ -3,6 +3,7 @@ import * as chai from 'chai';
 import * as sinon from 'sinon';
 
 import { container } from '../../ioc.container';
+import { TenantVerificationResult } from '../../middlewares/common';
 
 const {expect} = chai;
 
