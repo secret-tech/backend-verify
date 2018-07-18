@@ -4,9 +4,10 @@ services:
 before_install:
 - docker login -u $DOCKER_USER -p $DOCKER_PASS
 - chmod ugo+x ./build.sh
-script:
 - docker-compose build verify
-- docker-compose run --rm verify sh -c "yarn && yarn test"
+- docker-compose run -u 0 --rm verify sh -c "yarn"
+script:
+- docker-compose run -u 0 --rm verify sh -c "yarn test"
 - export TAG=`if [ "$TRAVIS_BRANCH" == "master" ];  then echo "production"; elif ["$TRAVIS_BRANCH"
   == "develop"]; then echo "stage"; else echo "dev-$(git rev-parse --short HEAD)"
   ; fi`
