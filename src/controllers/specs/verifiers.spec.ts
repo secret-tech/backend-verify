@@ -3,7 +3,7 @@ import app from '../../server';
 import * as express from 'express';
 import * as TypeMoq from 'typemoq';
 import { container } from '../../ioc.container';
-import { InversifyExpressServer } from 'inversify-express-utils';
+import { cleanUpMetadata, InversifyExpressServer } from 'inversify-express-utils';
 import * as bodyParser from 'body-parser';
 import { VerificationServiceFactoryType, VerificationServiceFactory, VerificationServiceFactoryRegister } from '../../services/verifications';
 import AuthenticatorVerificationService from '../../services/authenticator.verification';
@@ -65,6 +65,10 @@ function mockStorageForGoogleAuth(secret, verificationId, verificationData) {
 }
 
 describe('Test Verifier controller', () => {
+
+  beforeEach(async() => {
+    cleanUpMetadata();
+  });
 
   const notExistsVerificationId = 'afde0e7d-3a1f-4d51-8dad-7d0229bd64c4';
   const forcedId = '395a0e7d-3a1f-4d51-8dad-7d0229bd64ac';

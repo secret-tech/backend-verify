@@ -1,6 +1,6 @@
 import * as chai from 'chai';
 
-import { SimpleInMemoryStorageService, RedisStorageService } from '../storages';
+import { SimpleInMemoryStorageService, RedisStorageService, StorageService } from '../storages';
 
 const {expect} = chai;
 

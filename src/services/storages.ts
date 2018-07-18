@@ -5,6 +5,44 @@ import 'reflect-metadata';
 
 import config from '../config';
 
+/**
+ * Interfaces
+ */
+export interface ValueOptions {
+  ttlInSeconds: number;
+}
+
+/**
+ * StorageService interface.
+ */
+export interface StorageService {
+
+  /**
+   * Set value with expiration options
+   *
+   * @param name
+   * @param value
+   * @param options
+   */
+  set<T>(name: string, value: T, options?: ValueOptions): Promise<T>;
+
+  /**
+   * Remove value
+   *
+   * @param name
+   */
+  remove<T>(name: string): Promise<T>;
+
+  /**
+   * Get value
+   *
+   * @param name
+   * @param defaultValue
+   */
+  get<T>(name: string, defaultValue: T): Promise<T>;
+
+}
+
 // Exceptions
 
 export class StorageException extends Error { }
@@ -147,7 +185,7 @@ export class RedisStorageService implements StorageService {
             return reject(new StorageException(err));
           }
           try {
-            resolve(JSON.parse(result));
+            resolve(JSON.parse(result.toString()));
           } catch (error) {
             reject(new StorageException(error));
           }

@@ -20,7 +20,6 @@ interface MethodRequest extends AuthorizedRequest {
 /**
  * MethodsController resource
  */
-@injectable()
 @controller(
   '/methods',
   'AuthMiddleware'

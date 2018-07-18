@@ -21,7 +21,6 @@ interface VerifierRequest extends AuthorizedRequest {
 /**
  * VerifiersController resource
  */
-@injectable()
 @controller(
   '/methods/:method/verifiers',
   'AuthMiddleware',

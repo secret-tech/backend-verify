@@ -4,6 +4,7 @@ import * as request from 'request';
 import 'reflect-metadata';
 
 import config from '../config';
+import { TenantVerificationResult } from '../middlewares/common';
 
 export const AuthenticationServiceType = Symbol('AuthenticationServiceType');
 
