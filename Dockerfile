@@ -7,7 +7,7 @@ COPY custom-entrypoint.sh /usr/local/bin/custom-entrypoint.sh
 
 RUN chmod 755 /usr/local/bin/custom-entrypoint.sh && \
     addgroup verify && \
-    adduser -D -H -G verify verify && \
+    adduser -D -G verify verify && \
     yarn install
 
 EXPOSE 3000
